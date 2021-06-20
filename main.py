@@ -14,11 +14,11 @@ AWS_ACCESS = '<AWS Access Key ID>'
 AWS_SECRET = '<AWS Secret Access Key>'
 PREFIX = "cache-elb"
 AWS_ACCESS = input("Enter your KEY ID:")
-# AWS_SECRET = input("please enter your secret access key:")
-#, aws_secret_access_key=AWS_SECRET
+AWS_SECRET = input("please enter your secret access key:")
 
-elb = boto3.client('elbv2', region_name='us-east-2', aws_access_key_id=AWS_ACCESS)
-ec2 = boto3.client('ec2', region_name='us-east-2', aws_access_key_id=AWS_ACCESS)
+
+elb = boto3.client('elbv2', region_name='us-east-2', aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
+ec2 = boto3.client('ec2', region_name='us-east-2', aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
 
 
 def init_security_groups(vpc_id):
