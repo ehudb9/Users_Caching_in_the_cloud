@@ -9,32 +9,32 @@ from botocore import exceptions
 import sys
 import random
 
-
-# exper = time.now() + max_time
-def put(str_key: str, data: str, expiration_date: int):
-    """
-    Manage the distribute: which user goes where
-    :param str_key:
-    :param data:
-    :param expiration_date:
-    :return:
-    """
-    pass
-
-
-def get(str_key: str):
-    # None or data:
-    """
-    Get the user from the relevant EC2 instance
-    :param str_key:
-    :return:None or data
-    """
-    pass
-
-
-# This code is contributed by AshwinGoel
-def print_hi(name):
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+#
+# # exper = time.now() + max_time
+# def put(str_key: str, data: str, expiration_date: int):
+#     """
+#     Manage the distribute: which user goes where
+#     :param str_key:
+#     :param data:
+#     :param expiration_date:
+#     :return:
+#     """
+#     pass
+#
+#
+# def get(str_key: str):
+#     # None or data:
+#     """
+#     Get the user from the relevant EC2 instance
+#     :param str_key:
+#     :return:None or data
+#     """
+#     pass
+#
+#
+# # This code is contributed by AshwinGoel
+# def print_hi(name):
+#     print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
 
 
 PREFIX = "cache-elb"
