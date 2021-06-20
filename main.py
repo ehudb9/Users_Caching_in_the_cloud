@@ -2,6 +2,7 @@
 
 import time
 # import flask
+import boto3 as boto3
 from flask import Flask, session, redirect, url_for, escape, request
 import boto3
 import botocore
@@ -9,38 +10,15 @@ from botocore import exceptions
 import sys
 import random
 
-#
-# # exper = time.now() + max_time
-# def put(str_key: str, data: str, expiration_date: int):
-#     """
-#     Manage the distribute: which user goes where
-#     :param str_key:
-#     :param data:
-#     :param expiration_date:
-#     :return:
-#     """
-#     pass
-#
-#
-# def get(str_key: str):
-#     # None or data:
-#     """
-#     Get the user from the relevant EC2 instance
-#     :param str_key:
-#     :return:None or data
-#     """
-#     pass
-#
-#
-# # This code is contributed by AshwinGoel
-# def print_hi(name):
-#     print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
+AWS_ACCESS = '<AWS Access Key ID>'
+AWS_SECRET = '<AWS Secret Access Key>'
 PREFIX = "cache-elb"
+AWS_ACCESS = input("Enter your KEY ID:")
+# AWS_SECRET = input("please enter your secret access key:")
+#, aws_secret_access_key=AWS_SECRET
 
-elb = boto3.client('elbv2' , region_name='us-east-2')
-ec2 = boto3.client('ec2', region_name='us-east-2')
+elb = boto3.client('elbv2', region_name='us-east-2', aws_access_key_id=AWS_ACCESS)
+ec2 = boto3.client('ec2', region_name='us-east-2', aws_access_key_id=AWS_ACCESS)
 
 
 def init_security_groups(vpc_id):
@@ -198,6 +176,5 @@ def get_targets_status():
         else:
             healthy.append(target["Target"]["Id"])
     return healthy, sick
-
 
 ensure_elb_setup_created()
