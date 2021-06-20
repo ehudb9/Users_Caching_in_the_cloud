@@ -39,8 +39,8 @@ import random
 
 PREFIX = "cache-elb"
 
-elb = boto3.client('elbv2')
-ec2 = boto3.client('ec2')
+elb = boto3.client('elbv2' , region_name='us-east-2')
+ec2 = boto3.client('ec2', region_name='us-east-2')
 
 
 def init_security_groups(vpc_id):
