@@ -200,4 +200,4 @@ def get_targets_status():
     return healthy, sick
 
 
-ensure_elb_setup_created(PREFIX)
+ensure_elb_setup_created()
