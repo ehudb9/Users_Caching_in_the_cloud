@@ -1,5 +1,3 @@
-# Assignment2 clouds
-
 import time
 # import flask
 import boto3 as boto3
@@ -9,17 +7,20 @@ import botocore
 from botocore import exceptions
 import sys
 import random
-
-AWS_ACCESS = '<AWS Access Key ID>'
-AWS_SECRET = '<AWS Secret Access Key>'
-PREFIX = "cache-elb"
-AWS_ACCESS = input("Enter your KEY ID:")
-AWS_SECRET = input("please enter your secret access key:")
+import xlrd
 
 
-elb = boto3.client('elbv2', region_name='us-east-2', aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
-ec2 = boto3.client('ec2', region_name='us-east-2', aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
 
+PREFIX = "cache-elb-"
+USER_NAME = input("User name\n")
+path = "C:\\Temp\\" + str(USER_NAME) + "_AccessKeys.xltx"
+def start():
+    book = xlrd.open_workbook(path)
+    sheet = book.sheet_by_index(0)
+    b = sheet.cell(1, 0).value
+    a = sheet.cell(1, 1).value
+    return a,b
+AWS_ACCESS , AWS_SECRET = start()
 
 def init_security_groups(vpc_id):
     try:
@@ -82,7 +83,7 @@ def get_default_subnets():
 def ensure_elb_setup_created():
     response = None
     try:
-        response = elb.describe_load_balancers(Names=[PREFIX])
+        response = elb.describe_load_balancers(Names=["ELB"])
     except exceptions.ClientError as e:
         if e.response['Error']['Code'] != 'LoadBalancerNotFound':
             raise e
@@ -177,4 +178,6 @@ def get_targets_status():
             healthy.append(target["Target"]["Id"])
     return healthy, sick
 
+elb = boto3.client('elbv2', region_name='us-east-2', aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
+ec2 = boto3.client('ec2', region_name='us-east-2', aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
 ensure_elb_setup_created()
