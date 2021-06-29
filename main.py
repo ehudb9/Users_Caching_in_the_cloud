@@ -13,6 +13,18 @@ import json
 # USER_NAME = input("User name\n")
 USER_NAME = "cc"
 
+
+# ec2_user_data = """#cloud-config
+# runcmd:
+# - cd home/ubuntu
+# - git clone https://github.com/orzach-idc/cloud_computing_ex2.git
+# - cd cloud_computing_ex2/cachingInTheCloud/src
+# - chmod 777 *.sh
+# - ./ec2_init.sh
+# - sudo python3 ec2_server.py
+# """
+
+# TODO Config and add excel file to C:\Temp
 def get_n_instances():
     result = None
     temp = ""
@@ -36,7 +48,8 @@ def get_n_instances():
 
 path = "C:\\Temp\\" + str(USER_NAME) + "_AccessKeys.xltx"
 # nInstances = get_n_instances()
-nInstances = 3
+nInstances = 5
+
 
 # print(path)
 def start():
@@ -201,9 +214,9 @@ def register_instance_in_elb(instance_id):
 def instances_manager():
     res = ec2.describe_instances()
     instances = []
+    # TODO check if there are instances in TG
     for i in res["Reservations"]:
         for instance in i["Instances"]:
-            # instances.append()
             if instance["State"]["Name"] == "running":
                 instances.append(instance["InstanceId"])
     if nInstances == len(instances):
@@ -221,10 +234,10 @@ def instances_manager():
         for instance in instances:
             register_instance_in_elb(instance)
         # create more and register
-        instancesToCreate = nInstances - len(instance)
-        # for i in range(instancesToCreate):
-            #TODO create and add instances while extracting the instance id + adding the base script
-        return instances # ++TODO list of new instances
+        instancesToCreate = nInstances - len(instances)
+        create_ec2_instances(instancesToCreate)
+        return instances_manager()
+
 
 def get_targets_status():
     target_group = elb.describe_target_groups(
@@ -232,19 +245,42 @@ def get_targets_status():
     )
     target_group_arn = target_group["TargetGroups"][0]["TargetGroupArn"]
     health = elb.describe_target_health(TargetGroupArn=target_group_arn)
-    print(health)
     healthy = []
     sick = {}
     for target in health["TargetHealthDescriptions"]:
-        if target["TargetHealth"]["State"] == "unhealthy":
+        if target["TargetHealth"]["State"] != "healthy":
             sick[target["Target"]["Id"]] = target["TargetHealth"]["Description"]
         else:
             healthy.append(target["Target"]["Id"])
     return healthy, sick
 
 
+def create_ec2_instances(num_instances):
+    instances = ec2.run_instances(
+        ImageId='ami-00399ec92321828f5',
+        MinCount=int(num_instances),
+        MaxCount=int(num_instances),
+        InstanceType="t2.micro",
+        SecurityGroups=["cache-elb-instance-access"]
+    )
+    # for instance in instances:
+    #     instance.wait_until_running()
+    return instances
+
+
 elb = boto3.client('elbv2', region_name='us-east-2', aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
 ec2 = boto3.client('ec2', region_name='us-east-2', aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
+
+app = Flask(__name__)
+
+
+@app.route("/healthcheck")
+def index():
+    return "Hello World!"
+
+
 instances_manager()
-#TODO need to find a way to connect the instances
-print(get_targets_status())
+# TODO need to find a way to connect the instances
+# while True:
+#     print(get_targets_status())
+#     time.sleep(3)
