@@ -14,16 +14,6 @@ import json
 USER_NAME = "cc"
 
 
-# ec2_user_data = """#cloud-config
-# runcmd:
-# - cd home/ubuntu
-# - git clone https://github.com/orzach-idc/cloud_computing_ex2.git
-# - cd cloud_computing_ex2/cachingInTheCloud/src
-# - chmod 777 *.sh
-# - ./ec2_init.sh
-# - sudo python3 ec2_server.py
-# """
-
 # TODO Config and add excel file to C:\Temp
 def get_n_instances():
     result = None
