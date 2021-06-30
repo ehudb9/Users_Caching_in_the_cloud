@@ -115,12 +115,15 @@ def get_default_subnets():
 # creates the ELB as well as the target group
 # that it will distribute the requests to
 def ensure_elb_setup_created():
+    was_created = None  # TODO on logger\app\server create handler
     response = None
     try:
         response = elb.describe_load_balancers(Names=["Elb-Python"])
+        was_created = True
     except exceptions.ClientError as e:
         if e.response['Error']['Code'] != 'LoadBalancerNotFound':
             raise e
+        was_created = False
         subnets = get_default_subnets()
         response = elb.create_load_balancer(
             Name="Elb-Python",
@@ -143,7 +146,7 @@ def ensure_elb_setup_created():
     except exceptions.ClientError as e:
         if e.response['Error']['Code'] != 'TargetGroupNotFound':
             raise e
-        # TODO else if group found get the instances and return.
+
         target_group = elb.create_target_group(
             Name="elb-tg",
             Protocol="HTTP",
@@ -179,7 +182,6 @@ def ensure_elb_setup_created():
         )
     return results
 
-
 def register_instance_in_elb(instance_id):
     results = ensure_elb_setup_created()
     target_group = elb.describe_target_groups(
@@ -202,31 +204,135 @@ def register_instance_in_elb(instance_id):
 
 
 def instances_manager():
+    # get all instances
     res = ec2.describe_instances()
-    instances = []
-    # TODO check if there are instances in TG
+    # vars to assign the running and stopped
+    registered_instances = get_registered_instances_in_target_group()
+    running_instances = []
+    stopped_instances = []
+
     for i in res["Reservations"]:
         for instance in i["Instances"]:
             if instance["State"]["Name"] == "running":
-                instances.append(instance["InstanceId"])
-    if nInstances == len(instances):
-        for instance in instances:
-            register_instance_in_elb(instance)
-        return instances
-    # elif nInstances < len(instances):
-    if nInstances < len(instances):
-        instances1 = random.sample(instances, nInstances)
-        for instance in instances1:
-            register_instance_in_elb(instance)
-        return instances1
-    else:
-        # nInstances > instances
-        for instance in instances:
-            register_instance_in_elb(instance)
-        # create more and register
-        instancesToCreate = nInstances - len(instances)
-        create_ec2_instances(instancesToCreate)
-        return instances_manager()
+                running_instances.append(instance["InstanceId"])
+            if instance["State"]["Name"] == "stopped":
+                stopped_instances.append(instance["InstanceId"])
+
+    if len(registered_instances) == 0:
+        # handling the init case
+        if nInstances == len(running_instances):
+            for instance in running_instances:
+                register_instance_in_elb(instance)
+            return running_instances
+        if nInstances < len(running_instances):
+            instances1 = random.sample(running_instances, nInstances)
+            to_stop = []
+            for instance in instances1:
+                register_instance_in_elb(instance)
+            for i in running_instances:
+                if i not in instances1:
+                    to_stop.append(i)
+            stop_running_instances(to_stop)
+            return instances1
+        else:
+            # nInstances > instances
+            for instance in running_instances:
+                register_instance_in_elb(instance)
+            ##TODO : Check Correctness from this line untill the end of function lines(243 - 335)
+            ## and try and simplify it maybe functions
+            if nInstances - len(running_instances) - len(stopped_instances) >= 0:
+                # checking if the number of required instances
+                # is greater or equal to the number of running and stopped instances
+
+                # starting all stopped instances
+                start_stopped_instances(stopped_instances)
+                # if strictly bigger that means we have to create new instances else we are good
+                instancesToCreate = nInstances - len(running_instances) - len(stopped_instances)
+                if instancesToCreate > 0:
+                    # creating more and register in recursive call
+                    create_ec2_instances(instancesToCreate)
+                return instances_manager()
+            else:
+                # else we just need to select (n - m) instances to restart running
+                instances_to_start = random.sample(stopped_instances, nInstances - len(running_instances))
+                start_stopped_instances(instances_to_start)
+                return instances_manager()
+
+    if len(registered_instances) <= nInstances:
+        # if there is the same number we want to run all
+        if len(registered_instances) == nInstances:
+            for ins in registered_instances:
+                # if they are stopped we start them
+                if ins in stopped_instances:
+                    start_stopped_instances([ins])
+            return registered_instances
+
+        # otherwise we want to act in the following order :
+        # 1. isolate the running and stopped registered targets
+        registered_running_instances = []
+        registered_stopped_instances = []
+        for ins1 in registered_instances:
+            if ins1 in stopped_instances:
+                registered_stopped_instances.append(ins1)
+            if ins1 in running_instances:
+                registered_running_instances.append(ins1)
+        # 2. pick a (n-m) of the stopped instances and start them
+        registered_stopped_instances_to_start = random.sample(stopped_instances,
+                                                              nInstances - len(registered_running_instances))
+        start_stopped_instances(registered_stopped_instances_to_start)
+        # 3. combine those lists and return them
+        registered_running_instances.extend(registered_stopped_instances_to_start)
+        return registered_running_instances
+
+    if nInstances > len(registered_instances):
+        # in this case we want to act the following
+        # 1. run every single one of the registered instances
+        for ins in registered_instances:
+            # if they are stopped we start them
+            if ins in stopped_instances:
+                start_stopped_instances([ins])
+        # 2. find and isolate the rest of the instances (if they exist)
+        unregistered_running = []
+        unregistered_stopped = []
+        for instance in running_instances:
+            if instance not in registered_instances:
+                unregistered_running.append(instance)
+        for instance in stopped_instances:
+            if instance not in registered_instances:
+                unregistered_stopped.append(instance)
+        # 3. find out the number of remaining instances to assign
+        n1Instances = nInstances - len(registered_instances)
+        # 4. prioritize the existing not registered running instances and add them
+        if n1Instances < len(unregistered_running):
+            running_instances_to_register = random.sample(unregistered_running, n1Instances)
+            for instance_id in running_instances_to_register:
+                register_instance_in_elb(instance_id)
+        else:
+            for instance_id in unregistered_running:
+                register_instance_in_elb(instance_id)
+            registered_instances.extend(unregistered_running)
+            n2Instances = n1Instances - len(unregistered_running)
+            if n2Instances == 0:
+                return registered_instances.extend(unregistered_running)
+            else:
+                # 4. prioritize the existing and not registered stopped instances
+                if n2Instances < len(unregistered_stopped):
+                    stopped_instances_to_register_and_run = random.sample(unregistered_stopped, n2Instances)
+                    start_stopped_instances(stopped_instances_to_register_and_run)
+                    for instance_id in stopped_instances_to_register_and_run:
+                        register_instance_in_elb(instance_id)
+                    registered_instances.extend(stopped_instances_to_register_and_run)
+                    return registered_instances
+                else:
+                    for instance_id in unregistered_stopped:
+                        register_instance_in_elb(instance_id)
+                    registered_instances.extend(unregistered_stopped)
+                    n3Instances = n2Instances - len(unregistered_stopped)
+                    if n3Instances == 0:
+                        return registered_instances
+                    else:
+                        # 5. create new instances
+                        create_ec2_instances(n3Instances)
 
 
 def get_targets_status():
@@ -253,8 +359,38 @@ def create_ec2_instances(num_instances):
         InstanceType="t2.micro",
         SecurityGroups=["cache-elb-instance-access"]
     )
+    return instances
+
+
+##TODO : Check Correctness
+def start_stopped_instances(instances: list):
+    response = ec2.start_instances(InstanceIds=instances)
     # for instance in instances:
     #     instance.wait_until_running()
+    return response
+
+
+##TODO : Check Correctness
+def stop_running_instances(instances: list):
+    response = ec2.stop_instances(InstanceIds=instances)
+    # Hibernate=True | False,
+    # DryRun=True | False,
+    # Force=True | False
+    # )
+    # for instance in instances:
+    #     instance.wait_until_running()
+    return response
+
+##TODO : Check Correctness
+def get_registered_instances_in_target_group():
+    target_group = elb.describe_target_groups(
+        Names=["elb-tg"],
+    )
+    target_group_arn = target_group["TargetGroups"][0]["TargetGroupArn"]
+    health = elb.describe_target_health(TargetGroupArn=target_group_arn)
+    instances = []
+    for target in health["TargetHealthDescriptions"]:
+        instances.append(target["Target"]["Id"])
     return instances
 
 
