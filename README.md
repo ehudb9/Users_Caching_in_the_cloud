@@ -6,10 +6,10 @@
 3.	Init N instances with instance_manager: N constant – can be changed by the User.
 4.	Init HTTP server foreach Instance
 5.	The serve handle GET and PUT requests with cQUEUE caching distribute.
-6.	App.py :: manger data and instance_manager.
+6.	Every  request will handled by manger data and INSTANCE manager.
 
 ## STEPS TO RUN THE CODE:
-1.	Type :
+1.	Please connect your cmd to aws console with : 
 2.	Type 
 3.	D
 4.	D
