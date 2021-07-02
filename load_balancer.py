@@ -25,6 +25,7 @@ script_ec2_at_launch = f"""#!/bin/bash
     sudo aws configure set aws_access_key_id {AWS_ACCESS}
     sudo aws configure set aws_secret_access_key {AWS_SECRET} 
     sudo aws configure set region {REGION}
+    echo ok > healthcheck
     sudo python3 load_balancer.py
     sudo python3 http_server.py
 
