@@ -1,18 +1,18 @@
-import main
+import load_balancer
 import random
 
 
 def instances_manager():
     # get all instances
-    res = main.ec2.describe_instances()
+    res = load_balancer.ec2.describe_instances()
     instances = []
     for i in res["Reservations"]:
         for instance in i["Instances"]:
             if instance["State"]["Name"] == "running":
                 instances.append(instance["InstanceId"])
-    if main.nInstances == len(instances):
+    if load_balancer.nInstances == len(instances):
         for instance in instances:
-            main.register_instance_in_elb(instance)
+            load_balancer.register_instance_in_elb(instance)
         return instances
     # elif nInstances < len(instances):
     if nInstances < len(instances):
