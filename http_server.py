@@ -58,8 +58,8 @@ def update_all_instances():
             live_nodes = get_live_nodes()
             node_id1 = hash_func(item[0], len(live_nodes))
             node_id2 = (node_id1 + 1) % len(live_nodes)
-            ip1 = elb.get_instance_public_ip(live_nodes[node_id1]['Id'])
-            ip2 = elb.get_instance_public_ip(live_nodes[node_id2]['Id'])
+            ip1 = load_balancer.get_instance_public_ip(live_nodes[node_id1]['Id'])
+            ip2 = load_balancer.get_instance_public_ip(live_nodes[node_id2]['Id'])
             request_args = {
                 'str_key': item[0],
                 'data': item[1][0],
@@ -159,7 +159,7 @@ class HandleRequests(BaseHTTPRequestHandler):
 
         elif f.path == "/get":
             #             send read request to 2 ec2 by getting ip from hash func
-            live_nodes, sick = get_live_nodes()
+            live_nodes= get_live_nodes()
             node_id1 = hash_func(f.args['str_key'], len(live_nodes))
             node_id2 = (node_id1 + 1) % len(live_nodes)
             ip1 = load_balancer.get_instance_public_ip(live_nodes[node_id1]['Id'])

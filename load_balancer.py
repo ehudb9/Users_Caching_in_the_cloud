@@ -27,7 +27,8 @@ script_ec2_at_launch = f"""#!/bin/bash
     sudo aws configure set region {REGION}
     echo ok > healthcheck
     sudo python3 load_balancer.py
-    sudo python3 http_server.py
+    sudo python3 -m http.server 80
+    # sudo python3 http_server.py
 
 """
 
