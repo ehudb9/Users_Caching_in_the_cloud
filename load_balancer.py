@@ -22,7 +22,7 @@ runcmd:
     - git clone https://github.com/ehudb9/Users_Caching_in_the_cloud
     - cd Users_Caching_in_the_cloud
     - chmod 777 *.sh
-    - ./setup.sh
+    - ./setup2.sh
     - sudo aws configure set aws_access_key_id {AWS_ACCESS}
     - sudo aws configure set aws_secret_access_key {AWS_SECRET} 
     - sudo aws configure set region {REGION}
@@ -401,10 +401,11 @@ def get_registered_instances_in_target_group():
         instances.append(target["Target"]["Id"])
     return instances
 
+if __name__ == '__main__':
 
-elb = boto3.client('elbv2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
-ec2 = boto3.client('ec2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
-instances_manager()
+    elb = boto3.client('elbv2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
+    ec2 = boto3.client('ec2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
+    instances_manager()
 
 
 # app = Flask(__name__)
