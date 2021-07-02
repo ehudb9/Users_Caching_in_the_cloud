@@ -16,19 +16,20 @@ AWS_SECRET = sess.get_credentials().secret_key
 REGION = sess.region_name
 nInstances = 2
 
-script_ec2_at_launch = f""" #EC2
-runcmd:
-    - cd home/ubuntu 
-    - git clone https://github.com/ehudb9/Users_Caching_in_the_cloud
-    - cd Users_Caching_in_the_cloud
-    - chmod 777 *.sh
-    - ./setup2.sh
-    - sudo aws configure set aws_access_key_id {AWS_ACCESS}
-    - sudo aws configure set aws_secret_access_key {AWS_SECRET} 
-    - sudo aws configure set region {REGION}
-    - sudo python3 load_balancer.py
-    - sudo python3 http_server.py
+script_ec2_at_launch = f"""#!/bin/bash
+    cd home/ubuntu
+    sudo apt update
+    git clone https://github.com/ehudb9/Users_Caching_in_the_cloud
+    cd Users_Caching_in_the_cloud
+    chmod 777 *.sh
+    ./setup2.sh
+    sudo aws configure set aws_access_key_id {AWS_ACCESS}
+    sudo aws configure set aws_secret_access_key {AWS_SECRET} 
+    sudo aws configure set region {REGION}
+    sudo python3 load_balancer.py
+    sudo python3 http_server.py
 """
+
 
 
 def create_ec2_user_data(aws_access_key_id, aws_secret_access_key, aws_default_region):
