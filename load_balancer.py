@@ -15,7 +15,6 @@ AWS_ACCESS = sess.get_credentials().access_key
 AWS_SECRET = sess.get_credentials().secret_key
 REGION = sess.region_name
 nInstances = 2
-
 script_ec2_at_launch = f"""#!/bin/bash
     cd home/ubuntu
     sudo apt update
@@ -28,18 +27,15 @@ script_ec2_at_launch = f"""#!/bin/bash
     sudo aws configure set region {REGION}
     sudo python3 load_balancer.py
     sudo python3 http_server.py
+
 """
 
 
-
-def create_ec2_user_data(aws_access_key_id, aws_secret_access_key, aws_default_region):
-    ec2_user_data = f"""#cloud-config
-
-        """
-
-    return ec2_user_data
-
-
+# echo ok > healthcheck
+#     touch Hello.txt
+#     echo {REGION} > Hello.txt
+#     #sudo python3 -m http.server 80
+# cloud-config
 def get_n_instances():
     result = None
     temp = ""
@@ -60,22 +56,6 @@ def get_n_instances():
                 result = temp
     return int(result)
 
-
-# path = "C:\\Temp\\" + str(USER_NAME) + "_AccessKeys.xltx"
-# nInstances = get_n_instances()
-
-# def start():
-#     book = xlrd.open_workbook(path)
-#     sheet = book.sheet_by_index(0)
-#     a = sheet.cell(1, 0).value
-#     b = sheet.cell(1, 1).value
-#     return a, b
-#
-#
-# AWS_ACCESS, AWS_SECRET = start()
-
-# print(AWS_SECRET)
-# print(AWS_ACCESS)
 
 def init_security_groups(vpc_id):
     try:
@@ -275,6 +255,8 @@ def instances_manager():
                 instancesToCreate = nInstances - len(running_instances) - len(stopped_instances)
                 if instancesToCreate > 0:
                     new = create_ec2_instances(instancesToCreate)
+                    for instance in new:
+                        register_instance_in_elb(instance)
                     running_instances.extend(new)
                 return running_instances
             else:
@@ -402,11 +384,10 @@ def get_registered_instances_in_target_group():
         instances.append(target["Target"]["Id"])
     return instances
 
-if __name__ == '__main__':
 
-    elb = boto3.client('elbv2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
-    ec2 = boto3.client('ec2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
-    instances_manager()
+elb = boto3.client('elbv2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
+ec2 = boto3.client('ec2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
+instances_manager()
 
 
 # app = Flask(__name__)
@@ -427,15 +408,13 @@ if __name__ == '__main__':
 #             target_group_arn = target_group["TargetGroups"][0]["TargetGroupArn"]
 #             health = elb.describe_target_health(TargetGroupArn=target_group_arn)
 #             healthy = []
-#             sick = {}
+#             sick = {}run
 #             for target in health["TargetHealthDescriptions"]:
 #                 if target["TargetHealth"]["State"] == "unhealthy":
 #                     sick[target["Target"]["Id"]] = target["TargetHealth"]["Description"]
 #                 if target["TargetHealth"]["State"] == "healthy":
 #                     healthy.append(target["Target"]["Id"])
 #             return healthy, sick
-#
-#
 #         print(get_targets_status())
 #         time.sleep(5)
 def get_instance_public_ip(instance_id):
@@ -444,3 +423,8 @@ def get_instance_public_ip(instance_id):
         "Values": [instance_id],
     }]
     return ec2.describe_instances(Filters=filters)['Reservations'][0]['Instances'][0]['PublicIpAddress']
+
+
+while True:
+    print(get_targets_status())
+    time.sleep(10)
