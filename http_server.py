@@ -3,18 +3,15 @@ from flask import Flask, redirect, url_for, request
 import webbrowser
 
 ###
-from http.server import BaseHTTPRequestHandler, HTTPServer # python3
+from http.server import BaseHTTPRequestHandler, HTTPServer  # python3
 from datetime import datetime
 from furl import furl
 import jump
 import xxhash
-import elb
+import load_balancer
 import requests
 import threading
 import time
-import load_balancer
-####
-
 
 global current_live_node_count
 current_live_node_count = 0
@@ -22,12 +19,12 @@ host = ''
 port = 80
 instance_cache = dict()
 
-my_ip = (requests.get("http://169.254.169.254/latest/meta-data/public-ipv4").content).decode()
+my_ip = requests.get("http://169.254.169.254/latest/meta-data/public-ipv4").content.decode()
 
 
 def get_live_nodes():
-    healthy, _ = load_balancer.get_targets_status()
-    return healthy
+    return load_balancer.get_targets_status()
+
 
 def check_for_update():
     global current_live_node_count
@@ -35,7 +32,7 @@ def check_for_update():
     flag = True
     while flag:
         print('check')
-        live_nodes = get_live_nodes()
+        live_nodes, sick = get_live_nodes()
         print(f"live={len(live_nodes)}, prev={current_live_node_count}")
         if current_live_node_count != len(live_nodes):
             current_live_node_count = len(live_nodes)
@@ -55,7 +52,7 @@ def update_all_instances():
         #         check if instance update required
         else:
             print('update')
-            live_nodes = get_live_nodes()
+            live_nodes, sick = get_live_nodes()
             node_id1 = hash_func(item[0], len(live_nodes))
             node_id2 = (node_id1 + 1) % len(live_nodes)
             ip1 = load_balancer.get_instance_public_ip(live_nodes[node_id1]['Id'])
@@ -159,7 +156,7 @@ class HandleRequests(BaseHTTPRequestHandler):
 
         elif f.path == "/get":
             #             send read request to 2 ec2 by getting ip from hash func
-            live_nodes= get_live_nodes()
+            live_nodes, sick = get_live_nodes()
             node_id1 = hash_func(f.args['str_key'], len(live_nodes))
             node_id2 = (node_id1 + 1) % len(live_nodes)
             ip1 = load_balancer.get_instance_public_ip(live_nodes[node_id1]['Id'])
@@ -181,7 +178,7 @@ class HandleRequests(BaseHTTPRequestHandler):
 
         elif f.path == "/put":
             #           send write request to 2 ec2 by getting ip from hash func
-            live_nodes = get_live_nodes()
+            live_nodes, sick = get_live_nodes()
             node_id1 = hash_func(f.args['str_key'], len(live_nodes))
             node_id2 = (node_id1 + 1) % len(live_nodes)
             ip1 = load_balancer.get_instance_public_ip(live_nodes[node_id1]['Id'])
@@ -191,14 +188,12 @@ class HandleRequests(BaseHTTPRequestHandler):
 
 
 try:
-    current_live_node_count = len(get_live_nodes())
+    current_live_node_count = len(get_live_nodes()[0])
     update_thread = threading.Thread(target=check_for_update, args=[])
     update_thread.start()
     HTTPServer((host, port), HandleRequests).serve_forever()
 finally:
     exit()
-
-
 
 #
 #
