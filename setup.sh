@@ -21,4 +21,4 @@ sudo aws configure
 git clone https://github.com/ehudb9/Users_Caching_in_the_cloud.git
 
 # Run Python3 
-sudo python3 main.py
+sudo python3 load_balancer.py
