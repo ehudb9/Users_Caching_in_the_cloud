@@ -162,8 +162,8 @@ class HandleRequests(BaseHTTPRequestHandler):
             live_nodes, sick = get_live_nodes()
             node_id1 = hash_func(f.args['str_key'], len(live_nodes))
             node_id2 = (node_id1 + 1) % len(live_nodes)
-            ip1 = elb.get_instance_public_ip(live_nodes[node_id1]['Id'])
-            ip2 = elb.get_instance_public_ip(live_nodes[node_id2]['Id'])
+            ip1 = load_balancer.get_instance_public_ip(live_nodes[node_id1]['Id'])
+            ip2 = load_balancer.get_instance_public_ip(live_nodes[node_id2]['Id'])
             response = get_request_handler(ip1, ip2, f.args)
 
             self.wfile.write("get request response: {} ".format(response).encode('utf-8'))
@@ -181,17 +181,17 @@ class HandleRequests(BaseHTTPRequestHandler):
 
         elif f.path == "/put":
             #           send write request to 2 ec2 by getting ip from hash func
-            live_nodes, sick = get_live_nodes()
+            live_nodes = get_live_nodes()
             node_id1 = hash_func(f.args['str_key'], len(live_nodes))
             node_id2 = (node_id1 + 1) % len(live_nodes)
-            ip1 = elb.get_instance_public_ip(live_nodes[node_id1]['Id'])
-            ip2 = elb.get_instance_public_ip(live_nodes[node_id2]['Id'])
+            ip1 = load_balancer.get_instance_public_ip(live_nodes[node_id1]['Id'])
+            ip2 = load_balancer.get_instance_public_ip(live_nodes[node_id2]['Id'])
             response = put_request_handler(ip1, ip2, f.args)
             self.wfile.write("put request response: {}".format(response).encode('utf-8'))
 
 
 try:
-    current_live_node_count = len(get_live_nodes()[0])
+    current_live_node_count = len(get_live_nodes())
     update_thread = threading.Thread(target=check_for_update, args=[])
     update_thread.start()
     HTTPServer((host, port), HandleRequests).serve_forever()
