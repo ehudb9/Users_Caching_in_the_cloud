@@ -11,10 +11,10 @@ sudo pip3 install --upgrade awscli
 sudo pip3 install aws-sam-cli
 
 # Configure AWS setup
-#sudo aws configure
+sudo aws configure
 
 # Clone git repo
 #git clone https://github.com/ehudb9/Users_Caching_in_the_cloud.git
-
+#cd Users_Caching_in_the_cloud
 # Run Python3 
 sudo python3 load_balancer.py

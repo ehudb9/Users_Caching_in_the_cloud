@@ -1,8 +1,7 @@
 from hash_ring import HashRing
 from datanode import DataNodeClient
 
-REPLICATION_FACTOR = 2
-
+REPLICATION_FACTOR = 3
 
 class CacheManager:
     def __init__(self, hash_ring: HashRing, instance_id: str):

@@ -1,7 +1,7 @@
 import json
 import requests
 
-class DataNodeSpecification:
+class Data_node:
     def __init__(self, instance_id, private_dns):
         self.instance_id = instance_id
         self.private_dns = private_dns
@@ -12,7 +12,7 @@ class DataNodeClient:
         payload = {
             'key': key,
             'value': value,
-            'expiration_date' : expiration_date
+            'expiration_date': expiration_date
         }
 
         requests.post(f'http://{private_dns}/set-replica', data=json.dumps(payload))

@@ -25,10 +25,11 @@ script_ec2_at_launch = f"""#!/bin/bash
     sudo aws configure set aws_secret_access_key {AWS_SECRET} 
     sudo aws configure set region {REGION}
     echo ok > healthcheck
-    sudo python3 app.py   
+    # sudo python3 -m http.server 80 
+    sudo python3 app.py 
 """
 
-
+##################################################################
 def get_n_instances():
     result = None
     temp = ""
@@ -244,7 +245,8 @@ def register_instance_in_elb(instance_id):
     )
 
 
-def instances_manager(nInstances: int):  # get all running_instances
+def instances_manager(nInstances: int):
+    # get all running_instances
     print("Ensuring elb is setup")
     ensure_elb_setup_created()
     print("Get all instances")
@@ -366,6 +368,7 @@ def instances_manager(nInstances: int):  # get all running_instances
                         for i in instances11:
                             register_instance_in_elb(i)
 
+
 def get_targets_status():
     target_group = elb.describe_target_groups(
         Names=["elb-tg"],
@@ -424,7 +427,11 @@ def get_registered_instances_in_target_group():
         instances.append(target["Target"]["Id"])
     return instances
 
+def get_private_dns(healthy_instance):
+    ec2.describe_instances(
+        InstanceIds=[healthy_instance]).get("Reservations")[0]['Instances'][0]['PrivateDnsName']
 
+#to replace the update in the app
 def status_change():
     print("Get all instances")
     res = ec2.describe_instances()
@@ -454,16 +461,21 @@ def status_change():
         bool = True
     if len(healthy) != len(running_instances) or bool:
         # take all data
-        # redistribute it
+        # data = []
+        # for i in instances
+        #   data.extend(extract_all_data_from_instance())
+        # data_set = set(data)
+        # for data in data_set:
+        #   hash1 -> put()
+        #   hash2 -> put()
         # put
         pass
-
+############################################################################
 
 elb = boto3.client('elbv2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
 ec2 = boto3.client('ec2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
 instances_manager(get_n_instances())
-time.sleep(120)
+
 while True:
     print(get_targets_status())
     time.sleep(10)
-
