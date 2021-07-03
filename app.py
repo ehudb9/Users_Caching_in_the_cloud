@@ -3,7 +3,7 @@ import requests
 from cache_manager import CacheManager
 from datanode import DataNodeSpecification
 from hash_ring import HashRing
-import load_balancer
+# import load_balancer
 import os
 import boto3
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -96,4 +96,4 @@ if __name__ == '__main__':
     scheduler = BackgroundScheduler()
     #scheduler.add_job(func=populate_datanode_state, trigger="interval", seconds=5)
     scheduler.start()
-    app.run(port=80, host="0.0.0.0")
+    app.run(port=80, host="0.0.0.0/0")
