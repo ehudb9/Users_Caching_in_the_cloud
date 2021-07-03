@@ -113,7 +113,7 @@ def init_security_groups(vpc_id):
     )
     instance_sg = boto3.resource('ec2').SecurityGroup(instances["GroupId"])
     instance_sg.authorize_ingress(
-        CidrIp=cidr_block,
+        CidrIp="0.0.0.0/0",
         FromPort=80,
         ToPort=80,
         IpProtocol="TCP",
@@ -141,18 +141,18 @@ def get_default_subnets():
 # creates the ELB as well as the target group
 # that it will distribute the requests to
 def ensure_elb_setup_created():
-    #was_created = None
+    # was_created = None
     response = None
     try:
         print("Searching for existing ELB-Python load balancer")
         response = elb.describe_load_balancers(Names=["Elb-Python"])
         print("ELB-Python load balancer was found")
-     #   was_created = False
+    #   was_created = False
     except exceptions.ClientError as e:
         if e.response['Error']['Code'] != 'LoadBalancerNotFound':
             raise e
         print("Creating our ELB-Python load balancer")
-      #  was_created = True
+        #  was_created = True
         subnets = get_default_subnets()
         response = elb.create_load_balancer(
             Name="Elb-Python",
@@ -244,8 +244,7 @@ def register_instance_in_elb(instance_id):
     )
 
 
-def instances_manager():
-    # get all running_instances
+def instances_manager(nInstances: int):  # get all running_instances
     print("Ensuring elb is setup")
     ensure_elb_setup_created()
     print("Get all instances")
@@ -367,7 +366,6 @@ def instances_manager():
                         for i in instances11:
                             register_instance_in_elb(i)
 
-
 def get_targets_status():
     target_group = elb.describe_target_groups(
         Names=["elb-tg"],
@@ -427,9 +425,45 @@ def get_registered_instances_in_target_group():
     return instances
 
 
-nInstances = get_n_instances()
+def status_change():
+    print("Get all instances")
+    res = ec2.describe_instances()
+    # vars to assign the running and stopped
+    print("Get all instances in TG")
+    registered_instances = get_registered_instances_in_target_group()
+    print("Get all instances which can be assigned")
+    running_instances = []
+    stopped_instances = []
+    for i in res["Reservations"]:
+        for instance in i["Instances"]:
+            if instance["State"]["Name"] == "running":
+                running_instances.append(instance["InstanceId"])
+            if instance["State"]["Name"] == "stopped":
+                stopped_instances.append(instance["InstanceId"])
+
+    running_instances_in_tg = set(running_instances).intersection(set(registered_instances))
+    stopped_instances_in_tg = set(stopped_instances).intersection(set(registered_instances))
+    healthy, sick = get_targets_status()
+    cache = {}
+    bool = False
+    for i in sick.keys():
+        if i in running_instances_in_tg:
+            stop_running_instances([i])
+    if len(healthy) < 3:
+        instances_manager(3 - len(healthy))
+        bool = True
+    if len(healthy) != len(running_instances) or bool:
+        # take all data
+        # redistribute it
+        # put
+        pass
+
+
 elb = boto3.client('elbv2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
 ec2 = boto3.client('ec2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
-instances_manager()
-
+instances_manager(get_n_instances())
+time.sleep(120)
+while True:
+    print(get_targets_status())
+    time.sleep(10)
 
