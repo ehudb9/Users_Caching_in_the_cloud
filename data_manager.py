@@ -9,7 +9,7 @@ import xxhash
 HASH = 2 ** 10
 
 
-class CircularQueue:
+class CircularQueueCACHING:
 
     # constructor
     def __init__(self):  # initializing the class
@@ -136,7 +136,7 @@ class CircularQueue:
 
 
 # Driver Code
-ob = CircularQueue(5)
+ob = CircularQueueCACHING(5)
 ob.enqueue(14)
 ob.enqueue(22)
 ob.enqueue(13)

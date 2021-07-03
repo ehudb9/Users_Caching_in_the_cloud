@@ -1,5 +1,5 @@
 from flask import Flask, redirect, url_for, request
-#app = Flask(__name__)
+# app = Flask(__name__)
 import webbrowser
 
 ###
@@ -24,7 +24,6 @@ my_ip = requests.get("http://169.254.169.254/latest/meta-data/public-ipv4").cont
 
 def get_live_nodes():
     return load_balancer.get_targets_status()
-
 
 def check_for_update():
     global current_live_node_count
@@ -187,6 +186,7 @@ class HandleRequests(BaseHTTPRequestHandler):
             self.wfile.write("put request response: {}".format(response).encode('utf-8'))
 
 
+# run the listener
 try:
     current_live_node_count = len(get_live_nodes()[0])
     update_thread = threading.Thread(target=check_for_update, args=[])
@@ -264,4 +264,3 @@ finally:
 #
 # if __name__ == '__main__':
 #     main()
-
