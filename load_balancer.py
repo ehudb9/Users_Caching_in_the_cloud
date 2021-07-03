@@ -25,8 +25,8 @@ script_ec2_at_launch = f"""#!/bin/bash
     sudo aws configure set aws_secret_access_key {AWS_SECRET} 
     sudo aws configure set region {REGION}
     echo ok > healthcheck
-    # sudo python3 -m http.server 80 
-    sudo python3 app.py 
+    sudo python3 -m http.server 80 
+    # sudo python3 app.py 
 """
 
 ##################################################################
