@@ -10,16 +10,14 @@ sudo pip3 install --upgrade awscli
 # installing aws sam
 sudo pip3 install aws-sam-cli
 
-#installing furl
-sudo pip install furl
+#installing python packages
 sudo pip install flask
-
-# installing xxhash
 sudo pip install xxhash
-
-# installing jump
 sudo pip install jump-consistent-hash
-
+sudo pip install datetime
+sudo pip install APScheduler
+sudo pip install json
+#
 ## Run Python3
 #sudo python3 load_balancer.py
 #sudo python3 http_server.py
