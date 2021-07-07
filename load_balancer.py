@@ -471,13 +471,10 @@ def status_change():
         # put
         pass
 ############################################################################
-
+elb = boto3.client('elbv2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
+ec2 = boto3.client('ec2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
 if __name__ == "__main__":
-
-    elb = boto3.client('elbv2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
-    ec2 = boto3.client('ec2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
     instances_manager(get_n_instances())
-
     while True:
         print(get_targets_status())
         time.sleep(10)
