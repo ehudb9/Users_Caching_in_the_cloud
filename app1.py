@@ -19,22 +19,72 @@ def health():
 def land():
     return "YES", 200
 
-class Vars():
+
+@app.route('/test', methods=['GET'])
+def land():
+    return "TEST", 202
+
+
+@app.route('/get', methods=['GET'])
+def get():
+    key = requests.args.get('str_key')
+    data = None
+    res = None
+    try:
+        data = cache.get_data(key)
+        res = data, 200
+    except:
+        res = "data does not exist in this instance", 404
+    finally:
+        return res
+
+
+@app.route('/put', methods=['POST'])
+def post():
+    try:
+        str_key = requests.args.get('str_key')
+        data = requests.args.get('data')
+    except:
+        return None
+    try:
+        date = requests.args.get('expiration_date')
+    except:
+        date = None
+
+
+@app.route('/get_all', methods=['GET'])
+def get():
+    return cache.get_cache(), 200
+
+@app.route('/clear', methods=['POST'])
+def get():
+    cache.clear_cache()
+    return "cache is clear", 200
+
+@app.route('/get_all_and_clear', methods=['POST'])
+def get():
+    cache_cpy = cache.get_cache()
+    cache.clear_cache()
+    return cache_cpy, 200
+
+@app.route('/put_repart', methods=['POST'])
+def post():
+    url = f'http://{my_vars.ip_address}:80/put_repart?str_key={requests.args.get("str-key")}&data={requests.args.get("data")}'
+
+
+@app.route('/put_repart', methods=['GET'])
+def post():
+    url = f'http://{my_vars.ip_address}:80/put_repart?str_key={requests.args.get("str-key")}&data={requests.args.get("data")}'
+
+
+class Vars:
     def __init__(self):
         self.ip_address = requests.get('https://api.ipify.org').text
         self.instance_id = requests.get('http://169.254.169.254/latest/meta-data/instance-id').text
         self.live_nodes = load_balancer.get_targets_status()[0]
         self.n_live_nodes = len(self.live_nodes)
         self.port = 80
-        self.cache = {}
-        self.hash_cache = {}
         self.bs = BackgroundScheduler(daemon=True)
-
-    def expire_check(self):
-        for key in self.cache.keys():
-            val = json.loads(self.cache.get(key))
-            if val["expiration_date"] < Vars.get_millis(datetime.now()):
-                self.cache.pop(key)
 
     def check_status(self):
         current_live_nodes = load_balancer.get_targets_status()[0]
@@ -44,6 +94,27 @@ class Vars():
         self.n_live_nodes = len(self.live_nodes)
         load_balancer.repartition()
 
+    def add_base_jobs(self):
+        self.bs.add_job(self.check_status, 'interval', seconds=5)
+        print("base status")
+        self.bs.add_job(Cache.expire_check, 'interval', seconds=5)
+        print("expire check")
+
+    def start_bs(self):
+        self.bs.start()
+
+
+class Cache:
+    def __init__(self):
+        self.cache = {}
+        self.hash_cache = {}
+
+    def expire_check(self):
+        for key in self.cache.keys():
+            val = json.loads(self.cache.get(key))
+            if val["expiration_date"] < self.get_millis(datetime.now()):
+                self.cache.pop(key)
+
     @staticmethod
     def millis():
         return round(time.time() * 1000)
@@ -52,24 +123,27 @@ class Vars():
     def get_millis(dt):
         return int(round(dt.timestamp() * 1000))
 
-    def put_data(self, ip, str_data: str, data, is_backup=False):
-        if self.instance_id == ip or is_backup:
-            self.cache[str_data] = json.dumps({
-                "data": data,
-                "expiration_date": Vars.get_millis(datetime.now() + timedelta(days=90)),
-            })
+    @staticmethod
+    def hash_key(key):
+        return xxhash.xxh64_intdigest(key)
+
+    def put_data(self, ip, str_data: str, data, expiration_date=None, is_backup=False):
+        if my_vars.ip_address == ip or is_backup:
+            if expiration_date is None:
+                self.cache[str_data] = json.dumps({
+                    "data": data,
+                    "expiration_date": self.get_millis(datetime.now() + timedelta(days=90)),
+                })
+            else:
+                self.cache[str_data] = json.dumps({
+                    "data": data,
+                    "expiration_date": self.get_millis(expiration_date),
+                })
             # self.hash_cache[str_data] = xxhash
         pass
 
-    def put_data(self, ip, str_data: str, data: json, is_backup=False):
-        if self.instance_id == ip or is_backup:
-            self.cache[str_data] = data
-
-        # self.hash_cache[str_data] = xxhash
-        pass
-
-    def get_data(self, ip):
-        pass
+    def get_data(self, str_data):
+        return self.cache.get(str_data)
 
     def get_cache(self):
         return self.cache
@@ -77,18 +151,10 @@ class Vars():
     def clear_cache(self):
         self.cache = {}
 
-    def add_base_jobs(self):
-        self.bs.add_job(self.check_status, 'interval', seconds=5)
-        print("base status")
-        self.bs.add_job(self.expire_check, 'interval', seconds=5)
-        print("expire check")
-
-    def start_bs(self):
-        self.bs.start()
-
 
 if __name__ == '__main__':
-    v = Vars()
-    v.add_base_jobs()
-    v.start_bs()
+    my_vars = Vars()
+    cache = Cache()
+    my_vars.add_base_jobs()
+    my_vars.start_bs()
     app.run(host="0.0.0.0", port=80)
