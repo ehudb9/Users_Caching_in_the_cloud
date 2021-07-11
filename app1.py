@@ -21,7 +21,7 @@ def land():
 
 
 @app.route('/test', methods=['GET'])
-def land():
+def land2():
     return "TEST", 202
 
 
