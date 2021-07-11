@@ -5,9 +5,7 @@ from flask import Flask, session, redirect, url_for, escape, request
 import boto3
 import botocore
 from botocore import exceptions
-import sys
 import random
-import json
 
 # USER_NAME = input("User name\n")
 sess = boto3.Session()
@@ -23,28 +21,27 @@ script_ec2_at_launch = f"""#!/bin/bash
     ./setup2.sh
     sudo aws configure set aws_access_key_id {AWS_ACCESS}
     sudo aws configure set aws_secret_access_key {AWS_SECRET} 
-    sudo aws configure set region {REGION}
-    echo ok > healthcheck
-    sudo python3 -m http.server 80 
-    # sudo python3 app.py 
+    sudo aws configure set region {REGION} 
+    sudo python3 app1.py 
 """
 
-##################################################################
-def get_n_instances():
+
+def get_n_instances(tgNone: bool):
     result = None
     temp = ""
     digits = "1234567890"
     while result is None:
         result = input("input at least 3 number of instances\n")
         for char in result:
+            temp = ""
             if char not in digits:
-                temp = ""
                 result = None
                 break
             else:
                 temp += char
         else:
-            if temp == "0" or temp == "1" or temp == "2":
+            # if temp == "0" or ((temp == "1" or temp == "2") and tgNone):
+            if temp == "0":
                 result = None
             else:
                 result = temp
@@ -57,26 +54,6 @@ def get_n_instances():
 #     echo {REGION} > Hello.txt
 #     #sudo python3 -m http.server 80
 # cloud-config
-def get_n_instances():
-    result = None
-    temp = ""
-    digits = "1234567890"
-    while result is None:
-        result = input("input at least 3 number of instances\n")
-        for char in result:
-            if char not in digits:
-                temp = ""
-                result = None
-                break
-            else:
-                temp += char
-        else:
-            if temp == "0" or temp == "1" or temp == "2":
-                result = None
-            else:
-                result = temp
-    return int(result)
-
 
 def init_security_groups(vpc_id):
     try:
@@ -245,7 +222,7 @@ def register_instance_in_elb(instance_id):
     )
 
 
-def instances_manager(nInstances: int):
+def instances_manager():
     # get all running_instances
     print("Ensuring elb is setup")
     ensure_elb_setup_created()
@@ -261,15 +238,13 @@ def instances_manager(nInstances: int):
         for instance in i["Instances"]:
             if instance["State"]["Name"] == "running" or instance["State"]["Name"] == "pending":
                 if instance["State"]["Name"] == "pending":
-                    instance = boto3.resource('ec2').Instance(instance["InstanceId"])
-                    instance.wait_until_running()
+                    ins = boto3.resource('ec2').Instance(instance["InstanceId"])
+                    ins.wait_until_running()
                 running_instances.append(instance["InstanceId"])
             if instance["State"]["Name"] == "stopped":
                 stopped_instances.append(instance["InstanceId"])
-    all_instances = []
-    all_instances.extend(running_instances)
-    all_instances.extend(stopped_instances)
 
+    nInstances = get_n_instances(len(registered_instances) == 0)
     if len(registered_instances) == 0:
         print("Case 1 : Target group has no instances")
         if nInstances == len(running_instances):
@@ -427,54 +402,28 @@ def get_registered_instances_in_target_group():
         instances.append(target["Target"]["Id"])
     return instances
 
-def get_private_dns(healthy_instance):
-    ec2.describe_instances(
-        InstanceIds=[healthy_instance]).get("Reservations")[0]['Instances'][0]['PrivateDnsName']
 
-#to replace the update in the app
-def status_change():
-    print("Get all instances")
-    res = ec2.describe_instances()
-    # vars to assign the running and stopped
-    print("Get all instances in TG")
-    registered_instances = get_registered_instances_in_target_group()
-    print("Get all instances which can be assigned")
-    running_instances = []
-    stopped_instances = []
-    for i in res["Reservations"]:
-        for instance in i["Instances"]:
-            if instance["State"]["Name"] == "running":
-                running_instances.append(instance["InstanceId"])
-            if instance["State"]["Name"] == "stopped":
-                stopped_instances.append(instance["InstanceId"])
+def repartition():
+    live_instances = get_targets_status()[0]
+    all_data = {}
+    for instance_id in live_instances:
+        instance = boto3.resource('ec2').Instance(instance_id)
+        # data =
+        # fetch data
+        # all_data.update(data)
+        # clear data
 
-    running_instances_in_tg = set(running_instances).intersection(set(registered_instances))
-    stopped_instances_in_tg = set(stopped_instances).intersection(set(registered_instances))
-    healthy, sick = get_targets_status()
-    cache = {}
-    bool = False
-    for i in sick.keys():
-        if i in running_instances_in_tg:
-            stop_running_instances([i])
-    if len(healthy) < 3:
-        instances_manager(3 - len(healthy))
-        bool = True
-    if len(healthy) != len(running_instances) or bool:
-        # take all data
-        # data = []
-        # for i in instances
-        #   data.extend(extract_all_data_from_instance())
-        # data_set = set(data)
-        # for data in data_set:
-        #   hash1 -> put()
-        #   hash2 -> put()
-        # put
-        pass
-############################################################################
+    # for key in all_data :
+    #   key, put1 (put with data) include hash with index
+    #
+    #
+    #
+
+
 elb = boto3.client('elbv2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
 ec2 = boto3.client('ec2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
-if __name__ == "__main__":
-    instances_manager(get_n_instances())
+if __name__ == '__main__':
+    instances_manager()
     while True:
         print(get_targets_status())
-        time.sleep(10)
+        time.sleep(5)
