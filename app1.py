@@ -7,6 +7,7 @@ import time
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 import xxhash
+import jump
 
 app = Flask(__name__)
 
@@ -49,12 +50,26 @@ def post():
             raise Exception
     except:
         return None, 400
+
+
     try:
         date = req.args.get('expiration_date')
     except:
         date = None
+
     try:
-        res = cache.put_data(my_vars.instance_id, str_key, data, expiration_date=date)
+        hashed_str_key = my_vars.hash_index(str_key)
+        instance_index = jump.hash(int(hashed_str_key), len(my_vars.live_nodes))
+        instance_to_put_in_ip = load_balancer.get_ip(my_vars[instance_index])
+        if instance_to_put_in_ip == my_vars.ip_address:
+            res = cache.put_data(my_vars.instance_id, str_key, data, expiration_date=date)
+        else:
+            if date is None:
+                res = requests.post(my_vars.url_generator(instance_to_put_in_ip, "put_from_instance",
+                                                          f'str_key={req.args.get("str_key")}&data={req.args.get("data")}'))
+            else:
+                res = requests.post(my_vars.url_generator(instance_to_put_in_ip, "put_from_instance",
+                                                          f'str_key={req.args.get("str_key")}&data={req.args.get("data")}&expiration_date={req.args.get("expiration_date")}'))
     except:
         # pass
         res = None, 401
@@ -84,9 +99,25 @@ def get_all_clear():
     return cache_cpy, 200
 
 
+@app.route('/put_from_instance', methods=['POST', 'GET'])
+def post_from_instance():
+    try:
+        str_key = req.args.get('str_key')
+        data = req.args.get('data')
+        if str_key is None or data is None:
+            raise Exception
+    except:
+        return None, 400
+    try:
+        date = req.args.get('expiration_date')
+    except:
+        date = None
+    return cache.put_data(my_vars.instance_id, str_key, data, expiration_date=date)
+
+
 @app.route('/put_repart', methods=['POST'])
 def post1():
-    hashed_index = xxhash.xxh64_intdigest(requests.args.get("str_key"))
+    hashed_index = my_vars.hash_index(requests.args.get("str_key"))
     url = f'http://{load_balancer.get_ip(my_vars.live_nodes[hashed_index])}:{my_vars.port}/put_repart?str_key={requests.args.get("str_key")}&data={requests.args.get("data")}'
     # str_key={requests.args.get("str-key")}&data={requests.args.get("data")
 
@@ -125,10 +156,10 @@ class Vars:
     def hash_index(key):
         return xxhash.xxh64_intdigest(key) % (2 ** 10)
 
-    def url_generator(self, ip, op, params):
-        return "http://ec2-{}.{}.compute.amazonaws.com:{}/{}?{}".format(ip, load_balancer.REGION, my_vars.port, op,
+    def url_generator(self, ip: str, op, params):
+        return "http://ec2-{}.{}.compute.amazonaws.com:{}/{}?{}".format(ip.replace(".", "-"), load_balancer.REGION,
+                                                                        my_vars.port, op,
                                                                         params)
-
 
 
 class Cache:
