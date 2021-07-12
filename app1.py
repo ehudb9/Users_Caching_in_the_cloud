@@ -33,10 +33,28 @@ def get():
     data = None
     res = None
     try:
-        data = cache.get_data(key)
+        hashed_str_key = my_vars.hash_index(key)
+        instance_index = jump.hash(int(hashed_str_key), len(my_vars.live_nodes))
+        instance_to_get_from = load_balancer.get_ip(my_vars[instance_index])
+        backup_instance_ip = load_balancer.get_ip(my_vars[instance_index - 1])
+        try:
+            if instance_to_get_from == my_vars.ip_address:
+                data = cache.get_data(key)
+            else:
+                data = requests.get(my_vars.url_generator(instance_to_get_from, "get_from_instance",
+                                                          f'str_key={req.args.get("str_key")}'))
+        except:
+            try:
+                if backup_instance_ip == my_vars.ip_address:
+                    data = cache.get_data(key)
+                else:
+                    data = requests.get(my_vars.url_generator(instance_to_get_from, "get_from_instance",
+                                                              f'str_key={req.args.get("str_key")}'))
+            except:
+                res = data, 403
         res = data, 200
     except:
-        res = "data does not exist in this instance", 404
+        res = "data doesn't exist instance or expired", 404
     finally:
         return res
 
@@ -127,6 +145,21 @@ def post_from_instance():
     except:
         date = None
     return cache.put_data(my_vars.instance_id, str_key, data, expiration_date=date)
+
+
+@app.route('/get_from_instance', methods=['POST', 'GET'])
+def post_from_instance():
+    try:
+        str_key = req.args.get('str_key')
+        if str_key is None:
+            raise Exception
+    except:
+        return None, 400
+    try:
+        date = req.args.get('expiration_date')
+    except:
+        date = None
+    return cache.get_data(str_key)
 
 
 @app.route('/put_repart', methods=['POST'])
