@@ -51,19 +51,25 @@ def post():
     except:
         date = None
 
+    cache.put_data(my_vars.instance_id, str_key, data, expiration_date=date)
+    return "Data was put in {}".format(my_vars.instance_id), 200
+
 
 @app.route('/get_all', methods=['GET'])
 def get_all():
     return cache.get_cache(), 200
 
+
 @app.route('/id', methods=['GET'])
 def get_id():
     return my_vars.instance_id, 200
+
 
 @app.route('/clear', methods=['POST'])
 def clear():
     cache.clear_cache()
     return "cache is clear", 200
+
 
 @app.route('/get_all_and_clear', methods=['POST'])
 def get_all_clear():
@@ -71,10 +77,10 @@ def get_all_clear():
     cache.clear_cache()
     return cache_cpy, 200
 
+
 @app.route('/put_repart', methods=['POST'])
 def post1():
     url = f'http://{my_vars.ip_address}:80/put_repart?str_key={requests.args.get("str-key")}&data={requests.args.get("data")}'
-
 
 
 class Vars:
@@ -128,19 +134,17 @@ class Cache:
         return xxhash.xxh64_intdigest(key)
 
     def put_data(self, ip, str_data: str, data, expiration_date=None, is_backup=False):
-        if my_vars.ip_address == ip or is_backup:
-            if expiration_date is None:
-                self.cache[str_data] = json.dumps({
-                    "data": data,
-                    "expiration_date": self.get_millis(datetime.now() + timedelta(days=90)),
-                })
-            else:
-                self.cache[str_data] = json.dumps({
-                    "data": data,
-                    "expiration_date": self.get_millis(expiration_date),
-                })
-            # self.hash_cache[str_data] = xxhash
-        pass
+        if expiration_date is None:
+            self.cache[str_data] = json.dumps({
+                "data": data,
+                "expiration_date": self.get_millis(datetime.now() + timedelta(days=90)),
+            })
+        else:
+            self.cache[str_data] = json.dumps({
+                "data": data,
+                "expiration_date": self.get_millis(expiration_date),
+            })
+        # self.hash_cache[str_data] = xxhash
 
     def get_data(self, str_data):
         return self.cache.get(str_data)
