@@ -27,7 +27,7 @@ def land2():
     return "TEST", 202
 
 
-@app.route('/get', methods=['GET','POST'])
+@app.route('/get', methods=['GET', 'POST'])
 def get():
     key = req.args.get('str_key')
     data = None
@@ -46,9 +46,8 @@ def get():
             else:
                 print("request?")
                 res = requests.post(my_vars.url_generator(instance_to_get_from, "get_from_instance",
-                                                         f'str_key={req.args.get("str_key")}')).json()
+                                                          f'str_key={req.args.get("str_key")}')).json()
                 print("returned")
-            print(type())
             return res
         except:
             print("EH")
@@ -57,13 +56,12 @@ def get():
                     res = cache.get_data(key), 200
                 else:
                     res = requests.post(my_vars.url_generator(instance_to_get_from, "get_from_instance",
-                                                             f'str_key={req.args.get("str_key")}'))
+                                                              f'str_key={req.args.get("str_key")}')).json()
                 return res
             except:
                 return "ERR", 403
     except:
         return "data doesn't exist instance or expired", 404
-
 
 
 @app.route('/put', methods=['POST', 'GET'])
