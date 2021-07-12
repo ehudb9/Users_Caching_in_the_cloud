@@ -53,28 +53,24 @@ def post():
 
 
 @app.route('/get_all', methods=['GET'])
-def get():
+def get_all():
     return cache.get_cache(), 200
 
 @app.route('/clear', methods=['POST'])
-def get():
+def clear():
     cache.clear_cache()
     return "cache is clear", 200
 
 @app.route('/get_all_and_clear', methods=['POST'])
-def get():
+def get_all_clear():
     cache_cpy = cache.get_cache()
     cache.clear_cache()
     return cache_cpy, 200
 
 @app.route('/put_repart', methods=['POST'])
-def post():
+def post1():
     url = f'http://{my_vars.ip_address}:80/put_repart?str_key={requests.args.get("str-key")}&data={requests.args.get("data")}'
 
-
-@app.route('/put_repart', methods=['GET'])
-def post():
-    url = f'http://{my_vars.ip_address}:80/put_repart?str_key={requests.args.get("str-key")}&data={requests.args.get("data")}'
 
 
 class Vars:
