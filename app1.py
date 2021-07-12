@@ -39,16 +39,12 @@ def get():
         backup_instance_ip = load_balancer.get_ip(my_vars.live_nodes[instance_index - 1])
         try:
             if instance_to_get_from == my_vars.ip_address:
-                print("yes")
                 res = json.dumps(cache.get_data(key)), 200
             else:
-                print("request?")
                 res = requests.post(my_vars.url_generator(instance_to_get_from, "get_from_instance",
                                                           f'str_key={req.args.get("str_key")}')).json()
-                print("returned")
             return res
         except:
-            print("EH")
             try:
                 if backup_instance_ip == my_vars.ip_address:
                     res = json.dumps(cache.get_data(key)), 200
