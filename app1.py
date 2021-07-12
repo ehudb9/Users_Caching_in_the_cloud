@@ -27,7 +27,7 @@ def land2():
     return "TEST", 202
 
 
-@app.route('/get', methods=['GET'])
+@app.route('/get', methods=['GET','POST'])
 def get():
     key = req.args.get('str_key')
     data = None
