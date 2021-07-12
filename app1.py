@@ -38,19 +38,22 @@ def get():
         instance_to_get_from = load_balancer.get_ip(my_vars.live_nodes[instance_index])
         backup_instance_ip = load_balancer.get_ip(my_vars.live_nodes[instance_index - 1])
         try:
-            if instance_to_get_from == my_vars.ip_address or backup_instance_ip == my_vars.ip_address:
+            if instance_to_get_from == my_vars.ip_address:
                 res = json.dumps(cache.get_data(key)), 200
-                return res
-            if instance_to_get_from != my_vars.ip_address:
-                res = requests.post(my_vars.url_generator(instance_to_get_from, "get_from_instance",
-                                                          f'str_key={req.args.get("str_key")}')).json()
-                return res
-            if backup_instance_ip != my_vars.ip_address:
+            else:
                 res = requests.post(my_vars.url_generator(instance_to_get_from, "get_from_instance",
                                                           f'str_key={req.args.get("str_key")}')).json()
             return res
         except:
-            return "ERR", 403
+            try:
+                if backup_instance_ip == my_vars.ip_address:
+                    res = json.dumps(cache.get_data(key)), 200
+                else:
+                    res = requests.post(my_vars.url_generator(instance_to_get_from, "get_from_instance",
+                                                              f'str_key={req.args.get("str_key")}')).json()
+                return res
+            except:
+                return "ERR", 403
     except:
         return "data doesn't exist instance or expired", 404
 
