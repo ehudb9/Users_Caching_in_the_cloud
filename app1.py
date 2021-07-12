@@ -84,7 +84,7 @@ def post():
         instance_to_put_in_ip = load_balancer.get_ip(my_vars.live_nodes[instance_index])
         print(instance_to_put_in_ip)
         print(2.75)
-        backup_instance_ip = load_balancer.get_ip(my_vars[instance_index - 1])
+        backup_instance_ip = load_balancer.get_ip(my_vars.live_nodes[instance_index - 1])
         print(backup_instance_ip)
         print(3)
         if instance_to_put_in_ip == my_vars.ip_address:
