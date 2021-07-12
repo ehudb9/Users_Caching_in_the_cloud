@@ -42,7 +42,7 @@ def get():
             print(my_vars.ip_address)
             if instance_to_get_from == my_vars.ip_address:
                 print("yes")
-                res = cache.get_data(key), 200
+                res = json.dumps(cache.get_data(key)), 200
             else:
                 print("request?")
                 res = requests.post(my_vars.url_generator(instance_to_get_from, "get_from_instance",
@@ -53,7 +53,7 @@ def get():
             print("EH")
             try:
                 if backup_instance_ip == my_vars.ip_address:
-                    res = cache.get_data(key), 200
+                    res = json.dumps(cache.get_data(key)), 200
                 else:
                     res = requests.post(my_vars.url_generator(instance_to_get_from, "get_from_instance",
                                                               f'str_key={req.args.get("str_key")}')).json()
