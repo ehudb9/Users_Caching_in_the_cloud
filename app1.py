@@ -45,19 +45,19 @@ def get():
         try:
             if instance_to_get_from == my_vars.ip_address:
                 print("yes")
-                data = cache.get_data(key)
+                res = cache.get_data(key), 200
             else:
-                data = requests.get(my_vars.url_generator(instance_to_get_from, "get_from_instance",
-                                                          f'str_key={req.args.get("str_key")}'))
+                res = requests.get(my_vars.url_generator(instance_to_get_from, "get_from_instance",
+                                                         f'str_key={req.args.get("str_key")}'))
 
-                print(data)
+            print(res)
         except:
             try:
                 if backup_instance_ip == my_vars.ip_address:
-                    data = cache.get_data(key)
+                    res = cache.get_data(key), 200
                 else:
-                    data = requests.get(my_vars.url_generator(instance_to_get_from, "get_from_instance",
-                                                              f'str_key={req.args.get("str_key")}'))
+                    res = requests.get(my_vars.url_generator(instance_to_get_from, "get_from_instance",
+                                                             f'str_key={req.args.get("str_key")}'))
             except:
                 res = data, 403
         res = data, 200
