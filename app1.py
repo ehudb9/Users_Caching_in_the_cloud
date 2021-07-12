@@ -37,9 +37,9 @@ def get():
         instance_index = jump.hash(int(hashed_str_key) % len(my_vars.live_nodes), len(my_vars.live_nodes))
         instance_to_get_from = load_balancer.get_ip(my_vars.live_nodes[instance_index])
         backup_instance_ip = load_balancer.get_ip(my_vars.live_nodes[instance_index - 1])
+        print(instance_to_get_from)
+        print(my_vars.ip_address)
         try:
-            print(instance_to_get_from)
-            print(my_vars.ip_address)
             if instance_to_get_from == my_vars.ip_address:
                 print("yes")
                 res = json.dumps(cache.get_data(key)), 200
@@ -251,9 +251,9 @@ class Cache:
         self.cache = {}
 
 
+cache = Cache()
 if __name__ == '__main__':
     my_vars = Vars()
-    cache = Cache()
     my_vars.add_base_jobs()
     my_vars.start_bs()
     app.run(host="0.0.0.0", port=80)
