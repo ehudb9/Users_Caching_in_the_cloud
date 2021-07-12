@@ -1,8 +1,10 @@
 from flask import Flask
+from flask import request as req
 import requests
 import load_balancer
 import json
 import time
+
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 import xxhash
@@ -43,15 +45,15 @@ def get():
 def post():
     try:
         print(0)
-        str_key = requests.args.get('str_key')
-        data = requests.args.get('data')
+        str_key = req.args.get('str_key')
+        data = req.args.get('data')
         print(1)
     except:
         print(2)
         return None ,400
     try:
         print(3)
-        date = requests.args.get('expiration_date')
+        date = req.args.get('expiration_date')
         print(4)
     except:
         date = None
