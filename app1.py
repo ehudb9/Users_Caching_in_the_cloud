@@ -37,31 +37,23 @@ def get():
         instance_index = jump.hash(int(hashed_str_key) % len(my_vars.live_nodes), len(my_vars.live_nodes))
         instance_to_get_from = load_balancer.get_ip(my_vars.live_nodes[instance_index])
         backup_instance_ip = load_balancer.get_ip(my_vars.live_nodes[instance_index - 1])
-        print(instance_to_get_from)
-        print(my_vars.ip_address)
         try:
-            if instance_to_get_from == my_vars.ip_address:
-                print("yes")
+            if instance_to_get_from == my_vars.ip_address or backup_instance_ip == my_vars.ip_address:
                 res = json.dumps(cache.get_data(key)), 200
-            else:
-                print("request?")
+                return res
+            if instance_to_get_from != my_vars.ip_address:
                 res = requests.post(my_vars.url_generator(instance_to_get_from, "get_from_instance",
                                                           f'str_key={req.args.get("str_key")}')).json()
-                print("returned")
-            return res
-        except:
-            print("EH")
-            try:
-                if backup_instance_ip == my_vars.ip_address:
-                    res = json.dumps(cache.get_data(key)), 200
-                else:
-                    res = requests.post(my_vars.url_generator(instance_to_get_from, "get_from_instance",
-                                                              f'str_key={req.args.get("str_key")}')).json()
                 return res
-            except:
-                return "ERR", 403
+            if backup_instance_ip != my_vars.ip_address:
+                res = requests.post(my_vars.url_generator(instance_to_get_from, "get_from_instance",
+                                                          f'str_key={req.args.get("str_key")}')).json()
+                return res
+        except:
+            return "ERR", 403
     except:
         return "data doesn't exist instance or expired", 404
+
 
 
 @app.route('/put', methods=['POST', 'GET'])
@@ -82,29 +74,23 @@ def post():
         instance_index = jump.hash(int(hashed_str_key) % len(my_vars.live_nodes), len(my_vars.live_nodes))
         instance_to_put_in_ip = load_balancer.get_ip(my_vars.live_nodes[instance_index])
         backup_instance_ip = load_balancer.get_ip(my_vars.live_nodes[instance_index - 1])
-        if instance_to_put_in_ip == my_vars.ip_address:
+        if instance_to_put_in_ip == my_vars.ip_address or backup_instance_ip == my_vars.ip_address:
             res = cache.put_data(str_key, data, expiration_date=date)
-        else:
+        if instance_to_put_in_ip != my_vars.ip_address:
             if date is None:
                 res = requests.post(my_vars.url_generator(instance_to_put_in_ip, "put_from_instance",
                                                           f'str_key={req.args.get("str_key")}&data={req.args.get("data")}'))
             else:
                 res = requests.post(my_vars.url_generator(instance_to_put_in_ip, "put_from_instance",
                                                           f'str_key={req.args.get("str_key")}&data={req.args.get("data")}&expiration_date={req.args.get("expiration_date")}'))
-            if backup_instance_ip == my_vars.ip_address:
-                res = cache.put_data(str_key, data, expiration_date=date)
+        if backup_instance_ip != my_vars.ip_address:
+            if date is None:
+                res = requests.post(my_vars.url_generator(backup_instance_ip, "put_from_instance",
+                                                          f'str_key={req.args.get("str_key")}&data={req.args.get("data")}'))
             else:
-                if date is None:
-                    res = requests.post(my_vars.url_generator(backup_instance_ip, "put_from_instance",
-                                                              f'str_key={req.args.get("str_key")}&data={req.args.get("data")}'))
-                else:
-                    res = requests.post(my_vars.url_generator(backup_instance_ip, "put_from_instance",
-                                                              f'str_key={req.args.get("str_key")}&data={req.args.get("data")}&expiration_date={req.args.get("expiration_date")}'))
-                if res[1] > 299:
-                    return res
+                res = requests.post(my_vars.url_generator(backup_instance_ip, "put_from_instance",
+                                                          f'str_key={req.args.get("str_key")}&data={req.args.get("data")}&expiration_date={req.args.get("expiration_date")}'))
     except:
-        # pass
-        print("EXCEPTION")
         res = None, 401
     return res
 
@@ -164,7 +150,7 @@ def get_from_instance():
 @app.route('/put_repart', methods=['POST'])
 def post1():
     hashed_index = my_vars.hash_index(requests.args.get("str_key"))
-    url = f'http://{load_balancer.get_ip(my_vars.live_nodes[hashed_index])}:{my_vars.port}/put_repart?str_key={requests.args.get("str_key")}&data={requests.args.get("data")}'
+    url = f'http://{load_balancer.get_ip(my_vars.live_nodes[hashed_index])}:{my_vars.port}/put?str_key={requests.args.get("str_key")}&data={requests.args.get("data")}'
     # str_key={requests.args.get("str-key")}&data={requests.args.get("data")
 
 
