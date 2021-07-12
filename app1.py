@@ -4,7 +4,6 @@ import requests
 import load_balancer
 import json
 import time
-
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 import xxhash
@@ -41,7 +40,7 @@ def get():
         return res
 
 
-@app.route('/put', methods=['POST','GET'])
+@app.route('/put', methods=['POST', 'GET'])
 def post():
     try:
         str_key = req.args.get('str_key')
@@ -49,7 +48,7 @@ def post():
         if str_key is None or data is None:
             raise Exception
     except:
-        return None ,400
+        return None, 400
     try:
         date = req.args.get('expiration_date')
     except:
@@ -87,8 +86,10 @@ def get_all_clear():
 
 @app.route('/put_repart', methods=['POST'])
 def post1():
-    url = f'http://{my_vars.ip_address}:80/put_repart?str_key={requests.args.get("str-key")}&data={requests.args.get("data")}'
+    hashed_index = xxhash.xxh64_intdigest(requests.args.get("str_key"))
+    url = f'http://{load_balancer.get_ip(my_vars.live_nodes[hashed_index])}:{my_vars.port}/put_repart?str_key={requests.args.get("str_key")}&data={requests.args.get("data")}'
     # str_key={requests.args.get("str-key")}&data={requests.args.get("data")
+
 
 class Vars:
     def __init__(self):
@@ -96,8 +97,12 @@ class Vars:
         self.instance_id = requests.get('http://169.254.169.254/latest/meta-data/instance-id').text
         self.live_nodes = load_balancer.get_targets_status()[0]
         self.n_live_nodes = len(self.live_nodes)
+        self.my_index = self.get_my_index()
         self.port = 80
         self.bs = BackgroundScheduler(daemon=True)
+
+    def get_my_index(self):
+        return self.live_nodes.index
 
     def check_status(self):
         current_live_nodes = load_balancer.get_targets_status()[0]
@@ -115,6 +120,15 @@ class Vars:
 
     def start_bs(self):
         self.bs.start()
+
+    @staticmethod
+    def hash_index(key):
+        return xxhash.xxh64_intdigest(key) % (2 ** 10)
+
+    def url_generator(self, ip, op, params):
+        return "http://ec2-{}.{}.compute.amazonaws.com:{}/{}?{}".format(ip, load_balancer.REGION, my_vars.port, op,
+                                                                        params)
+
 
 
 class Cache:
@@ -135,10 +149,6 @@ class Cache:
     @staticmethod
     def get_millis(dt):
         return int(round(dt.timestamp() * 1000))
-
-    @staticmethod
-    def hash_key(key):
-        return xxhash.xxh64_intdigest(key)
 
     def put_data(self, ip, str_data: str, data, expiration_date=None, is_backup=False):
         if expiration_date is None:
