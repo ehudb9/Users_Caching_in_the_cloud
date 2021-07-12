@@ -76,9 +76,16 @@ def post():
     try:
         print(2)
         hashed_str_key = my_vars.hash_index(str_key)
+        print(hashed_str_key)
+        print(2.25)
         instance_index = jump.hash(int(hashed_str_key), len(my_vars.live_nodes))
+        print(instance_index)
+        print(2.5)
         instance_to_put_in_ip = load_balancer.get_ip(my_vars[instance_index])
+        print(instance_to_put_in_ip)
+        print(2.75)
         backup_instance_ip = load_balancer.get_ip(my_vars[instance_index - 1])
+        print(backup_instance_ip)
         print(3)
         if instance_to_put_in_ip == my_vars.ip_address:
             res = cache.put_data(my_vars.instance_id, str_key, data, expiration_date=date)
@@ -105,6 +112,7 @@ def post():
                     return res
     except:
         # pass
+        print("EXCEPTION")
         res = None, 401
     return res
 
