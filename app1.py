@@ -91,17 +91,17 @@ def post():
             if res[1] > 299:
                 return res
 
-        if backup_instance_ip == my_vars.ip_address:
-            res = cache.put_data(my_vars.instance_id, str_key, data, expiration_date=date)
-        else:
-            if date is None:
-                res = requests.post(my_vars.url_generator(backup_instance_ip, "put_from_instance",
-                                                          f'str_key={req.args.get("str_key")}&data={req.args.get("data")}'))
+            if backup_instance_ip == my_vars.ip_address:
+                res = cache.put_data(my_vars.instance_id, str_key, data, expiration_date=date)
             else:
-                res = requests.post(my_vars.url_generator(backup_instance_ip, "put_from_instance",
-                                                          f'str_key={req.args.get("str_key")}&data={req.args.get("data")}&expiration_date={req.args.get("expiration_date")}'))
-            if res[1] > 299:
-                return res
+                if date is None:
+                    res = requests.post(my_vars.url_generator(backup_instance_ip, "put_from_instance",
+                                                              f'str_key={req.args.get("str_key")}&data={req.args.get("data")}'))
+                else:
+                    res = requests.post(my_vars.url_generator(backup_instance_ip, "put_from_instance",
+                                                              f'str_key={req.args.get("str_key")}&data={req.args.get("data")}&expiration_date={req.args.get("expiration_date")}'))
+                if res[1] > 299:
+                    return res
     except:
         # pass
         res = None, 401
@@ -148,7 +148,7 @@ def post_from_instance():
 
 
 @app.route('/get_from_instance', methods=['POST', 'GET'])
-def post_from_instance():
+def get_from_instance():
     try:
         str_key = req.args.get('str_key')
         if str_key is None:
