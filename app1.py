@@ -78,7 +78,7 @@ def post():
         hashed_str_key = my_vars.hash_index(str_key)
         print(hashed_str_key)
         print(2.25)
-        instance_index = jump.hash(int(hashed_str_key), len(my_vars.live_nodes))
+        instance_index = jump.hash(int(hashed_str_key) % len(my_vars.live_nodes), len(my_vars.live_nodes))
         print(instance_index)
         print(2.5)
         instance_to_put_in_ip = load_balancer.get_ip(my_vars[instance_index])
@@ -154,6 +154,7 @@ def post_from_instance():
     except:
         date = None
     return cache.put_data(my_vars.instance_id, str_key, data, expiration_date=date)
+
 
 @app.route('/get_from_instance', methods=['POST', 'GET'])
 def get_from_instance():
