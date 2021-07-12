@@ -25,7 +25,6 @@ script_ec2_at_launch = f"""#!/bin/bash
     sudo python3 app1.py 
 """
 
-
 def get_n_instances(tgNone: bool):
     result = None
     temp = ""
@@ -40,8 +39,8 @@ def get_n_instances(tgNone: bool):
             else:
                 temp += char
         else:
-            # if temp == "0" or ((temp == "1" or temp == "2") and tgNone):
-            if temp == "0":
+            if temp == "0" or ((temp == "1" or temp == "2") and tgNone):
+            # if temp == "0":
                 result = None
             else:
                 result = temp
