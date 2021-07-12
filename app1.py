@@ -52,6 +52,7 @@ def post():
         date = None
 
     cache.put_data(my_vars.instance_id, str_key, data, expiration_date=date)
+
     return "Data was put in {}".format(my_vars.instance_id), 200
 
 
@@ -144,7 +145,7 @@ class Cache:
                 "data": data,
                 "expiration_date": self.get_millis(expiration_date),
             })
-        return
+        return "OKOKOK", 200
         # self.hash_cache[str_data] = xxhash
 
     def get_data(self, str_data):
