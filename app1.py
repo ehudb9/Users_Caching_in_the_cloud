@@ -50,9 +50,9 @@ def post():
         date = requests.args.get('expiration_date')
     except:
         date = None
-
+    print(1)
     cache.put_data(my_vars.instance_id, str_key, data, expiration_date=date)
-
+    print(2)
     return "Data was put in {}".format(my_vars.instance_id), 200
 
 
