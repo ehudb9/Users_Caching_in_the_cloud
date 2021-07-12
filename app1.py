@@ -29,7 +29,7 @@ def land2():
 
 @app.route('/get', methods=['GET'])
 def get():
-    key = requests.args.get('str_key')
+    key = req.args.get('str_key')
     data = None
     res = None
     try:
@@ -44,26 +44,20 @@ def get():
 @app.route('/put', methods=['POST','GET'])
 def post():
     try:
-        print(0)
         str_key = req.args.get('str_key')
         data = req.args.get('data')
-        print(1)
+        if str_key is None or data is None:
+            raise Exception
     except:
-        print(2)
         return None ,400
     try:
-        print(3)
         date = req.args.get('expiration_date')
-        print(4)
     except:
         date = None
     try:
-        print(5)
         res = cache.put_data(my_vars.instance_id, str_key, data, expiration_date=date)
-        print(6)
     except:
         # pass
-        print(7)
         res = None, 401
     return res
 
