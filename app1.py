@@ -48,12 +48,11 @@ def get():
             if backup_instance_ip != my_vars.ip_address:
                 res = requests.post(my_vars.url_generator(instance_to_get_from, "get_from_instance",
                                                           f'str_key={req.args.get("str_key")}')).json()
-                return res
+            return res
         except:
             return "ERR", 403
     except:
         return "data doesn't exist instance or expired", 404
-    return res
 
 
 @app.route('/put', methods=['POST', 'GET'])
