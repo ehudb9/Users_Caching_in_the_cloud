@@ -51,7 +51,6 @@ def post():
     except:
         return None, 400
 
-
     try:
         date = req.args.get('expiration_date')
     except:
@@ -61,6 +60,7 @@ def post():
         hashed_str_key = my_vars.hash_index(str_key)
         instance_index = jump.hash(int(hashed_str_key), len(my_vars.live_nodes))
         instance_to_put_in_ip = load_balancer.get_ip(my_vars[instance_index])
+        backup_instance_ip = load_balancer.get_ip(my_vars[instance_index - 1])
         if instance_to_put_in_ip == my_vars.ip_address:
             res = cache.put_data(my_vars.instance_id, str_key, data, expiration_date=date)
         else:
@@ -70,6 +70,20 @@ def post():
             else:
                 res = requests.post(my_vars.url_generator(instance_to_put_in_ip, "put_from_instance",
                                                           f'str_key={req.args.get("str_key")}&data={req.args.get("data")}&expiration_date={req.args.get("expiration_date")}'))
+            if res[1] > 299:
+                return res
+
+        if backup_instance_ip == my_vars.ip_address:
+            res = cache.put_data(my_vars.instance_id, str_key, data, expiration_date=date)
+        else:
+            if date is None:
+                res = requests.post(my_vars.url_generator(backup_instance_ip, "put_from_instance",
+                                                          f'str_key={req.args.get("str_key")}&data={req.args.get("data")}'))
+            else:
+                res = requests.post(my_vars.url_generator(backup_instance_ip, "put_from_instance",
+                                                          f'str_key={req.args.get("str_key")}&data={req.args.get("data")}&expiration_date={req.args.get("expiration_date")}'))
+            if res[1] > 299:
+                return res
     except:
         # pass
         res = None, 401
