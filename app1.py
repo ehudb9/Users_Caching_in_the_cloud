@@ -94,7 +94,7 @@ class Vars:
         print(1)
         self.bs.add_job(self.check_status, 'interval', seconds=5)
         print("base status")
-        self.bs.add_job(Cache.expire_check, 'interval', seconds=5)
+        self.bs.add_job(cache.expire_check, 'interval', seconds=5)
         print("expire check")
 
     def start_bs(self):
