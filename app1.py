@@ -33,9 +33,7 @@ def get():
     data = None
     res = None
     try:
-        print(1)
         hashed_str_key = my_vars.hash_index(key)
-        print(2)
         instance_index = jump.hash(int(hashed_str_key) % len(my_vars.live_nodes), len(my_vars.live_nodes))
         instance_to_get_from = load_balancer.get_ip(my_vars.live_nodes[instance_index])
         backup_instance_ip = load_balancer.get_ip(my_vars.live_nodes[instance_index - 1])
@@ -48,10 +46,12 @@ def get():
             else:
                 print("request?")
                 res = requests.post(my_vars.url_generator(instance_to_get_from, "get_from_instance",
-                                                         f'str_key={req.args.get("str_key")}'))
-            print(type(res))
+                                                         f'str_key={req.args.get("str_key")}')).json()
+                print("returned")
+            print(type())
             return res
         except:
+            print("EH")
             try:
                 if backup_instance_ip == my_vars.ip_address:
                     res = cache.get_data(key), 200
@@ -152,13 +152,15 @@ def post_from_instance():
 
 @app.route('/get_from_instance', methods=['POST', 'GET'])
 def get_from_instance():
+    print("HERE")
     try:
         str_key = req.args.get('str_key')
         if str_key is None:
             raise Exception
     except:
         return None, 400
-    return cache.get_data(str_key), 200
+    print("DONE")
+    return json.dumps(cache.get_data(str_key)), 200
 
 
 @app.route('/put_repart', methods=['POST'])
