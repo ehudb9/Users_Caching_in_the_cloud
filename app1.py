@@ -56,6 +56,10 @@ def post():
 def get_all():
     return cache.get_cache(), 200
 
+@app.route('/id', methods=['GET'])
+def get_id():
+    return my_vars.instance_id, 200
+
 @app.route('/clear', methods=['POST'])
 def clear():
     cache.clear_cache()
@@ -91,7 +95,6 @@ class Vars:
         load_balancer.repartition()
 
     def add_base_jobs(self):
-        print(1)
         self.bs.add_job(self.check_status, 'interval', seconds=5)
         print("base status")
         self.bs.add_job(cache.expire_check, 'interval', seconds=5)
