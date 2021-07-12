@@ -403,6 +403,17 @@ def get_registered_instances_in_target_group():
     return instances
 
 
+def get_ip(instance_id: id):
+    res = ec2.describe_instances()
+    if instance_id not in get_registered_instances_in_target_group():
+        return "Invalid ID"
+    for i in res["Reservations"]:
+        for instance in i["Instances"]:
+            if instance["InstanceId"] == instance_id:
+                return instance["PublicIpAddress"]
+    return "Invalid ID"
+
+
 def repartition():
     live_instances = get_targets_status()[0]
     all_data = {}
