@@ -53,7 +53,7 @@ def get():
             return "ERR", 403
     except:
         return "data doesn't exist instance or expired", 404
-
+    return res
 
 
 @app.route('/put', methods=['POST', 'GET'])
