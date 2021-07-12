@@ -81,7 +81,7 @@ def post():
         instance_index = jump.hash(int(hashed_str_key) % len(my_vars.live_nodes), len(my_vars.live_nodes))
         print(instance_index)
         print(2.5)
-        instance_to_put_in_ip = load_balancer.get_ip(my_vars[instance_index])
+        instance_to_put_in_ip = load_balancer.get_ip(my_vars.live_nodes[instance_index])
         print(instance_to_put_in_ip)
         print(2.75)
         backup_instance_ip = load_balancer.get_ip(my_vars[instance_index - 1])
