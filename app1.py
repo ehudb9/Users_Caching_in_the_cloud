@@ -34,9 +34,9 @@ def get():
     res = None
     try:
         hashed_str_key = my_vars.hash_index(key)
-        instance_index = jump.hash(int(hashed_str_key), len(my_vars.live_nodes))
-        instance_to_get_from = load_balancer.get_ip(my_vars[instance_index])
-        backup_instance_ip = load_balancer.get_ip(my_vars[instance_index - 1])
+        instance_index = jump.hash(int(hashed_str_key) % len(my_vars.live_nodes), len(my_vars.live_nodes))
+        instance_to_get_from = load_balancer.get_ip(my_vars.live_nodes[instance_index])
+        backup_instance_ip = load_balancer.get_ip(my_vars.live_nodes[instance_index - 1])
         try:
             if instance_to_get_from == my_vars.ip_address:
                 data = cache.get_data(key)
@@ -68,28 +68,17 @@ def post():
             raise Exception
     except:
         return None, 400
-    print(1)
     try:
         date = req.args.get('expiration_date')
     except:
         date = None
     try:
-        print(2)
         hashed_str_key = my_vars.hash_index(str_key)
-        print(hashed_str_key)
-        print(2.25)
         instance_index = jump.hash(int(hashed_str_key) % len(my_vars.live_nodes), len(my_vars.live_nodes))
-        print(instance_index)
-        print(2.5)
         instance_to_put_in_ip = load_balancer.get_ip(my_vars.live_nodes[instance_index])
-        print(instance_to_put_in_ip)
-        print(2.75)
         backup_instance_ip = load_balancer.get_ip(my_vars.live_nodes[instance_index - 1])
-        print(backup_instance_ip)
-        print(3)
         if instance_to_put_in_ip == my_vars.ip_address:
             res = cache.put_data(my_vars.instance_id, str_key, data, expiration_date=date)
-            print(4)
         else:
             if date is None:
                 res = requests.post(my_vars.url_generator(instance_to_put_in_ip, "put_from_instance",
