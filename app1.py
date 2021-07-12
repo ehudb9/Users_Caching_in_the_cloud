@@ -39,13 +39,13 @@ def get():
         return res
 
 
-@app.route('/put', methods=['POST'])
+@app.route('/put', methods=['POST','GET'])
 def post():
     try:
         str_key = requests.args.get('str_key')
         data = requests.args.get('data')
     except:
-        return None
+        return None ,400
     try:
         date = requests.args.get('expiration_date')
     except:
@@ -81,7 +81,7 @@ def get_all_clear():
 @app.route('/put_repart', methods=['POST'])
 def post1():
     url = f'http://{my_vars.ip_address}:80/put_repart?str_key={requests.args.get("str-key")}&data={requests.args.get("data")}'
-
+    # str_key={requests.args.get("str-key")}&data={requests.args.get("data")
 
 class Vars:
     def __init__(self):
@@ -144,6 +144,7 @@ class Cache:
                 "data": data,
                 "expiration_date": self.get_millis(expiration_date),
             })
+        return
         # self.hash_cache[str_data] = xxhash
 
     def get_data(self, str_data):
