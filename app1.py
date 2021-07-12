@@ -37,18 +37,19 @@ def get():
         hashed_str_key = my_vars.hash_index(key)
         print(2)
         instance_index = jump.hash(int(hashed_str_key) % len(my_vars.live_nodes), len(my_vars.live_nodes))
-        print(3)
         instance_to_get_from = load_balancer.get_ip(my_vars.live_nodes[instance_index])
-        print(4)
         backup_instance_ip = load_balancer.get_ip(my_vars.live_nodes[instance_index - 1])
-        print(5)
         try:
+            print(instance_to_get_from)
+            print(my_vars.ip_address)
             if instance_to_get_from == my_vars.ip_address:
                 print("yes")
                 res = cache.get_data(key), 200
             else:
+                print("request?")
                 res = requests.post(my_vars.url_generator(instance_to_get_from, "get_from_instance",
                                                          f'str_key={req.args.get("str_key")}'))
+            print(type(res))
             return res
         except:
             try:
