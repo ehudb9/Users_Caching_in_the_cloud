@@ -209,7 +209,7 @@ class Vars:
         self.live_nodes = load_balancer.get_targets_status()[0]
         self.n_live_nodes = len(self.live_nodes)
         #if self.live_nodes[0] == self.instance_id:
-        load_balancer.repartition()
+        repartition()
 
     def add_base_jobs(self):
         self.bs.add_job(self.check_status, 'interval', seconds=5)
@@ -228,7 +228,6 @@ class Vars:
         return "http://ec2-{}.{}.compute.amazonaws.com:{}/{}?{}".format(ip.replace(".", "-"), load_balancer.REGION,
                                                                         my_vars.port, op,
                                                                         params)
-
 
 class Cache:
     def __init__(self):
@@ -278,7 +277,27 @@ class Cache:
     def clear_cache(self):
         self.cache = {}
 
+def repartition():
+    live_instances = load_balancer.get_targets_status()[0]
+    all_data = {}
+    # url = f'http://{load_balancer.get_ip(my_vars.live_nodes[hashed_index])}:{my_vars.port}/put?str_key={}&data={}&expiration_date={}'
+    for instance_id in live_instances:
+        curr_ip = load_balancer.get_ip(instance_id)
+        # get and clear data
+        url_req = f'http://{curr_ip}:{80}/get_all_and_clear'
+        res = requests.post(url_req).json()
+        # fetch data
+        print(res)
+        print(type(res))
+        all_data.extend(res)
 
+    #resave-repartition:
+    for key in all_data.keys() :
+    #   key, put1 (put with data) include hash with index
+        url_req = f'http://{load_balancer.get_elb_arn()}:{80}/repost_data?str_key={key}&data={all_data.get(key)}'
+        res = requests.post(url_req)
+
+    return "OK - done"
 cache = Cache()
 if __name__ == '__main__':
     my_vars = Vars()
