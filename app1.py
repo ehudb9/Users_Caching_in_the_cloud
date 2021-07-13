@@ -212,9 +212,7 @@ class Vars:
             return
         self.live_nodes = load_balancer.get_targets_status()[0]
         self.n_live_nodes = len(self.live_nodes)
-        # if self.live_nodes[0] == self.instance_id:
-        load_balancer.repartition()
-        #repartition()
+        repartition()
 
     def add_base_jobs(self):
         self.bs.add_job(self.check_status, 'interval', seconds=5)
@@ -233,7 +231,6 @@ class Vars:
         return "http://ec2-{}.{}.compute.amazonaws.com:{}/{}?{}".format(ip.replace(".", "-"), load_balancer.REGION,
                                                                         my_vars.port, op,
                                                                         params)
-
 
 class Cache:
     def __init__(self):
@@ -313,9 +310,7 @@ def repartition():
 cache = Cache()
 if __name__ == '__main__':
     my_vars = Vars()
-    #my_vars.add_base_jobs()
-    #my_vars.start_bs()
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(func=my_vars.check_status, trigger="interval", seconds=5)
-    scheduler.start()
+    my_vars.add_base_jobs()
+    my_vars.start_bs()
+
     app.run(host="0.0.0.0", port=80)
