@@ -31,6 +31,8 @@ and finally , you will  see your instances as "healthy".
 6. Usage :\
 POST request:\
 `<'ELB public DNS name'>/put?str_key=<your_key_value>&data=<your_data>&expiration_date=<your_date in the format dd-mm-yyyy>`\
+expiration_date It is not mandatory.
+If you do not send expiration_date, it will be set for 90 days <br><br>
 GET request:\
 `<'ELB public DNS name'>/get?str_key=<your_key_value>`
 
