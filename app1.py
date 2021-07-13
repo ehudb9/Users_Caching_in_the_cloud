@@ -149,11 +149,33 @@ def get_from_instance():
     return json.dumps(cache.get_data(str_key)), 200
 
 
-@app.route('/put_repart', methods=['POST'])
-def post1():
-    hashed_index = my_vars.hash_index(requests.args.get("str_key"))
-    url = f'http://{load_balancer.get_ip(my_vars.live_nodes[hashed_index])}:{my_vars.port}/put?str_key={requests.args.get("str_key")}&data={requests.args.get("data")}'
-    # str_key={requests.args.get("str-key")}&data={requests.args.get("data")
+@app.route('/repost_data', methods=['POST'])
+def repost_data():
+    try:
+        str_key = req.args.get('str_key')
+        data = req.args.get('data')
+        if str_key is None or data is None:
+            raise Exception
+    except:
+        return None, 400
+
+    try:
+        hashed_str_key = my_vars.hash_index(str_key)
+        instance_index = jump.hash(int(hashed_str_key) % len(my_vars.live_nodes), len(my_vars.live_nodes))
+        instance_to_put_in_ip = load_balancer.get_ip(my_vars.live_nodes[instance_index])
+        backup_instance_ip = load_balancer.get_ip(my_vars.live_nodes[instance_index - 1])
+        if instance_to_put_in_ip == my_vars.ip_address or backup_instance_ip == my_vars.ip_address:
+            res = cache.reput_data(str_key, data)
+        if instance_to_put_in_ip != my_vars.ip_address:
+            res = requests.post(my_vars.url_generator(instance_to_put_in_ip, "put_from_instance",
+                                                      f'str_key={req.args.get("str_key")}&data={req.args.get("data")}'))
+
+        if backup_instance_ip != my_vars.ip_address:
+            res = requests.post(my_vars.url_generator(backup_instance_ip, "put_from_instance",
+                                                          f'str_key={req.args.get("str_key")}&data={req.args.get("data")}'))
+    except:
+        res = None, 401
+    return res
 
 
 class Vars:
@@ -228,6 +250,12 @@ class Cache:
             })
         return "OKOKOK", 200
         # self.hash_cache[str_data] = xxhash
+
+    def reput_data(self, str_data: str, data: dict):
+
+        self.cache[str_data] = json.dumps(data)
+        return "OKOKOK", 200
+
 
     def get_data(self, str_data):
         return self.cache.get(str_data)
