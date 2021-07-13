@@ -27,11 +27,7 @@
 5. Wait until the instances will be connected. (Approx. 2 minutes)
 All the stages will be printed in your terminal.
 and finally , you will  see your instances as "healthy".
-<br><br>
-<font color = "red">**NOTE**:</font>\
-   Currently the app.py and the distribute data unfortunately don't work.\
-   You will have ELB with N instances connected into target group and\
-   ready to work ("healthy").<br>
+
 6. Usage :\
 POST request:\
 `<'ELB public DNS name'>/put?str_key=<your_key_value>&data=<your_data>&expiration_date=<your_date in the format dd-mm-yyyy>`\
@@ -39,7 +35,7 @@ GET request:\
 `<'ELB public DNS name'>/get?str_key=<your_key_value>`
 
 7. In order to add instance\s restart `load_balancer.py` and give the new number of wanted instances:
-* if you have 3 instance and you want to add 1 you need to write 4
+* if you have 3 instance and you want to add 1 you need to write 4 <br>
 8. In order to remove instance\s restart `load_balancer.py` and give the new number of wanted instances:
 * if you have 3 instance and you want to remove 1 you need to write 2
 
