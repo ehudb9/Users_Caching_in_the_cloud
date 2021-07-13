@@ -6,6 +6,7 @@ import boto3
 import botocore
 from botocore import exceptions
 import random
+import app1
 
 # USER_NAME = input("User name\n")
 sess = boto3.Session()
@@ -45,14 +46,6 @@ def get_n_instances(tgNone: bool):
             else:
                 result = temp
     return int(result)
-
-
-#
-# echo ok > healthcheck
-#     touch Hello.txt
-#     echo {REGION} > Hello.txt
-#     #sudo python3 -m http.server 80
-# cloud-config
 
 def init_security_groups(vpc_id):
     try:
@@ -402,7 +395,7 @@ def get_registered_instances_in_target_group():
     return instances
 
 
-def get_ip(instance_id: id):
+def get_ip(instance_id: str):
     res = ec2.describe_instances()
     if instance_id not in get_registered_instances_in_target_group():
         return "Invalid ID"
@@ -416,8 +409,8 @@ def get_ip(instance_id: id):
 def repartition():
     live_instances = get_targets_status()[0]
     all_data = {}
-    for instance_id in live_instances:
-        instance = boto3.resource('ec2').Instance(instance_id)
+    # url = f'http://{load_balancer.get_ip(my_vars.live_nodes[hashed_index])}:{my_vars.port}/put?str_key={}&data={}&expiration_date={}'
+    # for instance_id in live_instances:
         # data =
         # fetch data
         # all_data.update(data)
