@@ -1,6 +1,7 @@
 import time
 # import flask
 import boto3 as boto3
+import requests
 from flask import Flask, session, redirect, url_for, escape, request
 import boto3
 import botocore
@@ -410,17 +411,23 @@ def repartition():
     live_instances = get_targets_status()[0]
     all_data = {}
     # url = f'http://{load_balancer.get_ip(my_vars.live_nodes[hashed_index])}:{my_vars.port}/put?str_key={}&data={}&expiration_date={}'
-    # for instance_id in live_instances:
-        # data =
+    for instance_id in live_instances:
+        curr_ip = get_ip(instance_id)
+        # get and clear data
+        url_req = f'http://{curr_ip}:{80}/get_all_and_clear'
+        res = requests.post(url_req).json()
         # fetch data
-        # all_data.update(data)
-        # clear data
+        print(res)
+        print(type(res))
+        all_data.extend(res)
 
-    # for key in all_data :
+    #resave-repartition:
+    for key in all_data :
     #   key, put1 (put with data) include hash with index
-    #
-    #
-    #
+        url_req = f'http://{curr_ip}:{80}/get_all_and_clear'
+        res = requests.post(url_req)
+
+
 
 
 elb = boto3.client('elbv2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
