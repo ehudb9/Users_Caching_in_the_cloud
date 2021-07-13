@@ -208,12 +208,13 @@ class Vars:
     def check_status(self):
         print("check status")
         current_live_nodes = load_balancer.get_targets_status()[0]
-        if current_live_nodes == self.live_nodes:
+        if len(current_live_nodes) == len(self.live_nodes):
             return
         self.live_nodes = load_balancer.get_targets_status()[0]
         self.n_live_nodes = len(self.live_nodes)
         # if self.live_nodes[0] == self.instance_id:
-        repartition()
+        load_balancer.repartition()
+        #repartition()
 
     def add_base_jobs(self):
         self.bs.add_job(self.check_status, 'interval', seconds=5)

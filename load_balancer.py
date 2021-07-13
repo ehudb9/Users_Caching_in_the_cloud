@@ -408,27 +408,32 @@ def get_ip(instance_id: str):
 
 
 def repartition():
+    print("updating!")
     live_instances = get_targets_status()[0]
     all_data = {}
     # url = f'http://{load_balancer.get_ip(my_vars.live_nodes[hashed_index])}:{my_vars.port}/put?str_key={}&data={}&expiration_date={}'
     for instance_id in live_instances:
         curr_ip = get_ip(instance_id)
         # get and clear data
-        url_req = f'http://{curr_ip}:{80}/get_all_and_clear'
+        url_req = "http://ec2-{}.{}.compute.amazonaws.com:{}/{}".format(curr_ip.replace(".", "-"), REGION,
+                                                                        80, "get_all_and_clear")
+        # url_req = f'http://{curr_ip}:{80}/get_all_and_clear'
         res = requests.post(url_req).json()
         # fetch data
         print(res)
         print(type(res))
         all_data.extend(res)
 
-    #resave-repartition:
+    # resave-repartition:
     for key in all_data.keys():
-    #   key, put1 (put with data) include hash with index
-    #     ip = live_nodes[random.sample(1, len(self.live_nodes))[0]]
-        url_req = f'http://{get_elb_arn()}:{80}/repost_data?str_key={key}&data={all_data.get(key)}'
+        #   key, put1 (put with data) include hash with index
+        ip = live_instances[random.sample(1, len(live_instances))[0]]
+        url_req = url_generator(ip, "repost_data", f"str_key={key}&data={all_data.get(key)}")
         res = requests.post(url_req)
 
     return "OK - done"
+def url_generator(ip: str, op, params):
+    return "http://ec2-{}.{}.compute.amazonaws.com:{}/{}?{}".format(ip.replace(".", "-"), REGION, 80, op, params)
 
 def get_elb_arn():
     ensure_elb_setup_created()
