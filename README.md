@@ -11,12 +11,12 @@
 
 ## STEPS TO RUN THE CODE:
 1. Assumed you have connected your cmd to `AWS-CLI`, and typed your `AWS-security-credentials`.
-- Make sure you have the following policies attached to your CMD:  
-- AmazonEC2FullAccess 
-- IAMFullAccess
-- AmazonAPIGatewayInvokeFullAccess
-- AmazonAPIGatewayAdministrator
-- AdministratorAccess-AWSElasticBeanstalk
+* Make sure you have the following policies attached to your CMD:  
+* AmazonEC2FullAccess 
+* IAMFullAccess
+* AmazonAPIGatewayInvokeFullAccess
+* AmazonAPIGatewayAdministrator
+* AdministratorAccess-AWSElasticBeanstalk
 
 2. Clone this repo
  
@@ -39,9 +39,9 @@ GET request:\
 `<'ELB public DNS name'>/get?str_key=<your_key_value>`
 
 7. In order to add instance\s restart `load_balancer.py` and give the new number of wanted instances:
-- if you have 3 instance and you want to add 1 you need to write 4
+* if you have 3 instance and you want to add 1 you need to write 4
 8. In order to remove instance\s restart `load_balancer.py` and give the new number of wanted instances:
-- if you have 3 instance and you want to remove 1 you need to write 2
+* if you have 3 instance and you want to remove 1 you need to write 2
 
 
 
