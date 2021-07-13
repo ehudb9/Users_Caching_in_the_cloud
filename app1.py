@@ -315,6 +315,6 @@ if __name__ == '__main__':
     #my_vars.add_base_jobs()
     #my_vars.start_bs()
     scheduler = BackgroundScheduler()
-    scheduler.add_job(func=my_vars.check_status(), trigger="interval", seconds=5)
+    scheduler.add_job(func=my_vars.check_status, trigger="interval", seconds=5)
     scheduler.start()
     app.run(host="0.0.0.0", port=80)
