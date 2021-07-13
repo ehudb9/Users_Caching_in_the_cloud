@@ -424,12 +424,16 @@ def repartition():
     #resave-repartition:
     for key in all_data.keys() :
     #   key, put1 (put with data) include hash with index
-        url_req = f'http://{key}:{80}/repost_data?data={all_data.get(key)}'
+        url_req = f'http://{get_elb_arn()}:{80}/repost_data?str_key={key}&data={all_data.get(key)}'
         res = requests.post(url_req)
 
-    return res
+    return "OK - done"
 
-
+def get_elb_arn():
+    ensure_elb_setup_created()
+    response = elb.describe_load_balancers(Names=["Elb-Python"])
+    elb_arn = response["LoadBalancers"][0]["LoadBalancerArn"]
+    return elb_arn
 
 elb = boto3.client('elbv2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
 ec2 = boto3.client('ec2', region_name=REGION, aws_access_key_id=AWS_ACCESS, aws_secret_access_key=AWS_SECRET)
