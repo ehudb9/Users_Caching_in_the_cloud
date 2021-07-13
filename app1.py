@@ -204,6 +204,7 @@ class Vars:
         return self.live_nodes.index
 
     def check_status(self):
+        print("check status")
         current_live_nodes = load_balancer.get_targets_status()[0]
         if current_live_nodes == self.live_nodes:
             return
@@ -279,6 +280,7 @@ class Cache:
         self.cache = {}
 
 def repartition():
+    print("updating!")
     live_instances = load_balancer.get_targets_status()[0]
     all_data = {}
     # url = f'http://{load_balancer.get_ip(my_vars.live_nodes[hashed_index])}:{my_vars.port}/put?str_key={}&data={}&expiration_date={}'
