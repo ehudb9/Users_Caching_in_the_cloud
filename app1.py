@@ -136,6 +136,7 @@ def post_from_instance():
         date = None
     return cache.put_data(str_key, data, expiration_date=date)
 
+
 @app.route('/repost_from_instance', methods=['POST', 'GET'])
 def repost():
     try:
@@ -147,6 +148,7 @@ def repost():
         return None, 400
 
     return cache.reput_data(str_key, data)
+
 
 @app.route('/get_from_instance', methods=['POST', 'GET'])
 def get_from_instance():
@@ -184,7 +186,7 @@ def repost_data():
 
         if backup_instance_ip != my_vars.ip_address:
             res = requests.post(my_vars.url_generator(backup_instance_ip, "repost_from_instance",
-                                                          f'str_key={req.args.get("str_key")}&data={req.args.get("data")}'))
+                                                      f'str_key={req.args.get("str_key")}&data={req.args.get("data")}'))
     except:
         res = None, 401
     return res
@@ -210,7 +212,7 @@ class Vars:
             return
         self.live_nodes = load_balancer.get_targets_status()[0]
         self.n_live_nodes = len(self.live_nodes)
-        #if self.live_nodes[0] == self.instance_id:
+        # if self.live_nodes[0] == self.instance_id:
         repartition()
 
     def add_base_jobs(self):
@@ -230,6 +232,7 @@ class Vars:
         return "http://ec2-{}.{}.compute.amazonaws.com:{}/{}?{}".format(ip.replace(".", "-"), load_balancer.REGION,
                                                                         my_vars.port, op,
                                                                         params)
+
 
 class Cache:
     def __init__(self):
@@ -269,7 +272,6 @@ class Cache:
         self.cache[str_data] = json.dumps(data)
         return "OKOKOK", 200
 
-
     def get_data(self, str_data):
         return self.cache.get(str_data)
 
@@ -278,6 +280,7 @@ class Cache:
 
     def clear_cache(self):
         self.cache = {}
+
 
 def repartition():
     print("updating!")
@@ -288,7 +291,7 @@ def repartition():
         curr_ip = load_balancer.get_ip(instance_id)
         # get and clear data
         url_req = "http://ec2-{}.{}.compute.amazonaws.com:{}/{}".format(curr_ip.replace(".", "-"), load_balancer.REGION,
-                                                                 my_vars.port, "get_all_and_clear")
+                                                                        my_vars.port, "get_all_and_clear")
         # url_req = f'http://{curr_ip}:{80}/get_all_and_clear'
         res = requests.post(url_req).json()
         # fetch data
@@ -296,17 +299,22 @@ def repartition():
         print(type(res))
         all_data.extend(res)
 
-    #resave-repartition:
-    for key in all_data.keys() :
-    #   key, put1 (put with data) include hash with index
+    # resave-repartition:
+    for key in all_data.keys():
+        #   key, put1 (put with data) include hash with index
         ip = my_vars.live_nodes[random.sample(1, len(my_vars.live_nodes))[0]]
         url_req = my_vars.url_generator(ip, "repost_data", f"str_key={key}&data={all_data.get(key)}")
         res = requests.post(url_req)
 
     return "OK - done"
+
+
 cache = Cache()
 if __name__ == '__main__':
     my_vars = Vars()
-    my_vars.add_base_jobs()
-    my_vars.start_bs()
+    #my_vars.add_base_jobs()
+    #my_vars.start_bs()
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(func=my_vars.check_status(), trigger="interval", seconds=5)
+    scheduler.start()
     app.run(host="0.0.0.0", port=80)
