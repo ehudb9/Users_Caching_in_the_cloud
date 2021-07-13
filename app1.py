@@ -135,6 +135,17 @@ def post_from_instance():
         date = None
     return cache.put_data(str_key, data, expiration_date=date)
 
+@app.route('/repost_from_instance', methods=['POST', 'GET'])
+def repost():
+    try:
+        str_key = req.args.get('str_key')
+        data = req.args.get('data')
+        if str_key is None or data is None:
+            raise Exception
+    except:
+        return None, 400
+
+    return cache.reput_data(str_key, data)
 
 @app.route('/get_from_instance', methods=['POST', 'GET'])
 def get_from_instance():
@@ -167,11 +178,11 @@ def repost_data():
         if instance_to_put_in_ip == my_vars.ip_address or backup_instance_ip == my_vars.ip_address:
             res = cache.reput_data(str_key, data)
         if instance_to_put_in_ip != my_vars.ip_address:
-            res = requests.post(my_vars.url_generator(instance_to_put_in_ip, "put_from_instance",
+            res = requests.post(my_vars.url_generator(instance_to_put_in_ip, "repost_from_instance",
                                                       f'str_key={req.args.get("str_key")}&data={req.args.get("data")}'))
 
         if backup_instance_ip != my_vars.ip_address:
-            res = requests.post(my_vars.url_generator(backup_instance_ip, "put_from_instance",
+            res = requests.post(my_vars.url_generator(backup_instance_ip, "repost_from_instance",
                                                           f'str_key={req.args.get("str_key")}&data={req.args.get("data")}'))
     except:
         res = None, 401

@@ -422,11 +422,12 @@ def repartition():
         all_data.extend(res)
 
     #resave-repartition:
-    for key in all_data :
+    for key in all_data.keys() :
     #   key, put1 (put with data) include hash with index
-        url_req = f'http://{curr_ip}:{80}/get_all_and_clear'
+        url_req = f'http://{key}:{80}/repost_data?data={all_data.get(key)}'
         res = requests.post(url_req)
 
+    return res
 
 
 
