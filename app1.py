@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 import xxhash
 import jump
+import random
 
 app = Flask(__name__)
 
@@ -284,7 +285,9 @@ def repartition():
     for instance_id in live_instances:
         curr_ip = load_balancer.get_ip(instance_id)
         # get and clear data
-        url_req = f'http://{curr_ip}:{80}/get_all_and_clear'
+        url_req = "http://ec2-{}.{}.compute.amazonaws.com:{}/{}".format(curr_ip.replace(".", "-"), load_balancer.REGION,
+                                                                 my_vars.port, "get_all_and_clear")
+        # url_req = f'http://{curr_ip}:{80}/get_all_and_clear'
         res = requests.post(url_req).json()
         # fetch data
         print(res)
@@ -294,7 +297,8 @@ def repartition():
     #resave-repartition:
     for key in all_data.keys() :
     #   key, put1 (put with data) include hash with index
-        url_req = f'http://{load_balancer.get_elb_arn()}:{80}/repost_data?str_key={key}&data={all_data.get(key)}'
+        ip = my_vars.live_nodes[random.sample(1, len(my_vars.live_nodes))[0]]
+        url_req = my_vars.url_generator(ip, "repost_data", f"str_key={key}&data={all_data.get(key)}")
         res = requests.post(url_req)
 
     return "OK - done"

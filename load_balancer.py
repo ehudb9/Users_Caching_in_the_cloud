@@ -422,8 +422,9 @@ def repartition():
         all_data.extend(res)
 
     #resave-repartition:
-    for key in all_data.keys() :
+    for key in all_data.keys():
     #   key, put1 (put with data) include hash with index
+    #     ip = live_nodes[random.sample(1, len(self.live_nodes))[0]]
         url_req = f'http://{get_elb_arn()}:{80}/repost_data?str_key={key}&data={all_data.get(key)}'
         res = requests.post(url_req)
 
