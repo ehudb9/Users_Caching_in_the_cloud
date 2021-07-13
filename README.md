@@ -11,14 +11,20 @@
 
 ## STEPS TO RUN THE CODE:
 1. Assumed you have connected your cmd to `AWS-CLI`, and typed your `AWS-security-credentials`.
+- Make sure you have the following policies attached to your CMD:  
+- AmazonEC2FullAccess 
+- IAMFullAccess
+- AmazonAPIGatewayInvokeFullAccess
+- AmazonAPIGatewayAdministrator
+- AdministratorAccess-AWSElasticBeanstalk
 
 2. Clone this repo
  
-3. And run `load_ balancer.py`
+3. Run the file from cmd\terminal `load_ balancer.py`
  
-4. Enter ```int``` number of instance.
+4. Enter ```int``` number of instances wanted in ELB.
 
-5. Wait until the instances will be connected.
+5. Wait until the instances will be connected. (Approx. 2 minutes)
 All the stages will be printed in your terminal.
 and finally , you will  see your instances as "healthy".
 <br><br>
@@ -31,5 +37,18 @@ POST request:\
 `<'ELB public DNS name'>/put?str_key=<your_key_value>&data=<your_data>&expiration_date=<your_date in the format dd-mm-yyyy>`\
 GET request:\
 `<'ELB public DNS name'>/get?str_key=<your_key_value>`
+6. In order to add instance\s restart `load_balancer.py` and give the new number of wanted instances:
+- if you have 3 instance and you want to add 1 you need to write 4
+7. In order to remove instance\s restart `load_balancer.py` and give the new number of wanted instances:
+- if you have 3 instance and you want to remove 1 you need to write 2
 
-    **doesn't work**
+
+
+
+
+
+
+
+
+
+
